@@ -1,0 +1,46 @@
+# swagger.yaml
+
+openapi: 3.0.3
+info:
+  title: Taiwan Thesis Pulse 論文統計 API
+  description: 提供全站論文統計資訊
+  version: 1.0.0
+servers:
+  - url: https://api.taiwan-thesis-pulse.lovable.app
+paths:
+  /api/statistics:
+    get:
+      summary: 取得論文統計資訊
+      description: 取得全站論文總數、參與學校數、開放取用論文數、累計下載數、授權率等統計資料
+      responses:
+        '200':
+          description: 成功取得統計資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalTheses:
+                    type: integer
+                    description: 論文總數
+                    example: 1234567
+                  totalSchools:
+                    type: integer
+                    description: 參與學校數
+                    example: 145
+                  openAccessTheses:
+                    type: integer
+                    description: 開放取用論文數
+                    example: 890123
+                  totalDownloads:
+                    type: integer
+                    description: 累計下載數
+                    example: 45600000
+                  authorizationRate:
+                    type: number
+                    format: float
+                    description: 授權率（百分比，0~100）
+                    example: 72.1
+        '500':
+          description: 伺服器錯誤
+components: {}
