@@ -181,7 +181,7 @@ paths:
           description: 伺服器錯誤
   /api/ranking/detailedfields:
     get:
-      summary: 取得博碩士論文熱門排行榜
+      summary: 取得論文「學類」熱門排行榜
       description: 取得各校熱門論文排行榜，支援排行類型、年度與筆數限制
       parameters:
         - name: type

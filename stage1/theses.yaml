@@ -8,7 +8,7 @@ info:
 servers:
   - url: https://api.taiwan-thesis-pulse.lovable.app
 paths:
-  /api/thesis/{id}:
+  /api/theses/{id}:
     get:
       summary: 取得單篇論文詳細內容
       description: 依論文 id 取得詳細內容
@@ -95,7 +95,7 @@ paths:
         '500':
           description: 伺服器錯誤
 
-  /api/thesis/search:
+  /api/theses/search:
     get:
       summary: 搜尋論文
       description: 依多種條件（含進階檢索）搜尋論文，回傳論文列表

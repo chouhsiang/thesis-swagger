@@ -1,0 +1,138 @@
+# swagger.yaml
+
+openapi: 3.0.3
+info:
+  title: Taiwan Thesis Pulse 單篇論文內容 API
+  description: 個人資料
+  version: 1.0.0
+servers:
+  - url: https://api.taiwan-thesis-pulse.lovable.app
+paths:
+  /api/my/savedtheses:
+    get:
+      summary: 我的收藏
+      description: 我的收藏
+      responses:
+        '200':
+          description: 成功取得我的收藏
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: 論文唯一識別碼
+                          example: "1"
+                        title:
+                          type: string
+                          description: 論文標題
+                          example: "台灣博碩士論文網發展現況與展望"
+                        author:
+                          type: string
+                          description: 作者
+                          example: "王小明"
+                        school:
+                          type: string
+                          description: 學校
+                          example: "國立臺灣大學"
+                        degree:
+                          type: string
+                          description: 學位
+                          example: "碩士"
+                        type:
+                          type: string
+                          description: 論文類型
+                          example: "學術"
+                        college:
+                          type: string
+                          description: 學院
+                          example: "工學院"
+                        department:
+                          type: string
+                          description: 系所
+                          example: "資訊工程學系"
+                        advisor:
+                          type: string
+                          description: 指導教授
+                          example: "陳大明"
+                        language:
+                          type: string
+                          description: 論文語言
+                          example: "中文"
+                        year:
+                          type: integer
+                          description: 年度
+                          example: 113
+                        abstract:
+                          type: string
+                          description: 摘要
+                          example: "本論文探討台灣博碩士論文網的發展現況與未來展望..."
+                        keywords:
+                          type: array
+                          description: 關鍵字
+                          items:
+                            type: string
+                          example: ["論文網", "台灣", "Open Access"]
+                        fullTextAvailable:
+                          type: boolean
+                          description: 是否有全文
+                          example: true
+                        viewCount:
+                          type: integer
+                          description: 被點閱數
+                          example: 1200
+                        downloadCount:
+                          type: integer
+                          description: 下載數
+                          example: 800
+                        referenceCount:
+                          type: integer
+                          description: 被引用數
+                          example: 25
+                example:
+                  data:
+                    - id: "1"
+                      title: "台灣博碩士論文網發展現況與展望"
+                      author: "王小明"
+                      school: "國立臺灣大學"
+                      degree: "碩士"
+                      type: "學術"
+                      college: "工學院"
+                      department: "資訊工程學系"
+                      advisor: "陳大明"
+                      language: "中文"
+                      year: 113
+                      abstract: "本論文探討台灣博碩士論文網的發展現況與未來展望..."
+                      keywords: ["論文網", "台灣", "Open Access"]
+                      fullTextAvailable: true
+                      viewCount: 1200
+                      downloadCount: 800
+                      referenceCount: 25
+                    - id: "2"
+                      title: "AI在論文檢索中的應用"
+                      author: "李小華"
+                      school: "國立成功大學"
+                      degree: "博士"
+                      type: "技術"
+                      college: "資訊學院"
+                      department: "人工智慧研究所"
+                      advisor: "林教授"
+                      language: "中文"
+                      year: 112
+                      abstract: "本研究分析AI技術在論文檢索效率上的提升..."
+                      keywords: ["AI", "論文檢索", "效率"]
+                      fullTextAvailable: false
+                      viewCount: 950
+                      downloadCount: 600
+                      referenceCount: 10
+        '400':
+          description: 錯誤的請求參數
+        '500':
+          description: 伺服器錯誤
+components: {}
