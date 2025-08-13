@@ -1,0 +1,80 @@
+openapi: 3.0.1
+info:
+  title: 學校全文瀏覽數排行榜 API
+  version: 1.0.0
+  description: 取得各學校依全文瀏覽數排序的統計資料
+
+paths:
+  /rankings/school-views:
+    get:
+      summary: 取得學校全文瀏覽數排行榜
+      tags:
+        - Rankings
+      parameters:
+        - in: query
+          name: keyword
+          schema:
+            type: string
+          description: 關鍵字搜尋（學校名稱）
+          example: 交通大學
+        - in: query
+          name: schoolType
+          schema:
+            type: string
+            enum: [公立, 私立]
+          description: 學校類型篩選
+          example: 公立
+        - in: query
+          name: dataScope
+          schema:
+            type: string
+            enum: [所有資料, 僅授權]
+          description: 資料來源範圍
+          example: 所有資料
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: 第幾頁（預設第 1 頁）
+          example: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            enum: [10, 20, 50, 100]
+          description: 每頁顯示筆數（預設 20）
+          example: 20
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: 總資料筆數
+                    example: 80
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rank:
+                          type: integer
+                          example: 1
+                        schoolName:
+                          type: string
+                          example: 國立陽明交通大學
+                        fullTextAuthorized:
+                          type: integer
+                          example: 1146
+                        totalTheses:
+                          type: integer
+                          example: 1423
+        '400':
+          description: 查詢參數錯誤
+        '500':
+          description: 伺服器錯誤

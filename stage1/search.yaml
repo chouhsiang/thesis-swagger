@@ -1,0 +1,89 @@
+openapi: 3.0.1
+info:
+  title: 論文搜尋 API
+  version: 1.0.0
+  description: 提供基本檢索功能以搜尋博碩士論文資料
+
+paths:
+  /theses/search:
+    post:
+      summary: 基本論文檢索
+      tags:
+        - Theses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                keyword:
+                  type: string
+                  description: 關鍵字搜尋（例如論文標題、摘要、作者）
+                  example: 人工智慧
+                thesisType:
+                  type: integer
+                  enum: [1, 2, 3, 4, 5]
+                  description: |
+                    論文種類代碼：
+                    - 1：學術論文
+                    - 2：代替論文：技術報告（應用科技類）
+                    - 3：代替論文：作品連同書面報告（藝術類)
+                    - 4：代替論文：成就證明連同書面報告（體育運動類）
+                    - 5：代替論文：專業實務報告（專業實務類）
+                  example: 1
+                degreeType:
+                  type: string
+                  enum: [學術型, 專業型]
+                  description: 學位類型
+                  example: 學術型
+                graduationYear:
+                  type: integer
+                  description: 畢業學年度（西元年）
+                  example: 2023
+      responses:
+        '200':
+          description: 查詢成功，回傳論文列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: 符合條件的論文總數
+                    example: 86
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                          example: 人工智慧於醫療影像辨識之應用
+                        author:
+                          type: string
+                          example: 張三
+                        school:
+                          type: string
+                          example: 國立臺灣大學
+                        department:
+                          type: string
+                          example: 資訊工程學系
+                        thesisType:
+                          type: string
+                          example: 學術型碩士
+                        degreeType:
+                          type: string
+                          example: 學術型
+                        graduationYear:
+                          type: integer
+                          example: 2023
+                        downloadUrl:
+                          type: string
+                          format: uri
+                          example: https://thesis.example.edu.tw/download/abc123.pdf
+        '400':
+          description: 無效的請求（例如缺少欄位或格式錯誤）
+        '500':
+          description: 伺服器錯誤
