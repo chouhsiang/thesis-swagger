@@ -6,3 +6,4 @@
 - [排行榜](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/rankings.yaml)
 - [論文](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/theses.yaml)
 - [會員](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/my.yaml)
+- [申請](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/apply.yaml)
