@@ -2,11 +2,11 @@
 
 openapi: 3.0.3
 info:
-  title: Taiwan Thesis Pulse 最新公告 API
+  title: 「新世代博碩士論文網」最新公告 API
   description: 提供最新公告列表與公告詳細內容
-  version: 1.4.0
+  version: 1.0.0
 servers:
-  - url: https://api.taiwan-thesis-pulse.lovable.app
+  - url: ndltd.ncl.edu.tw
 paths:
   /api/announcements:
     get:
@@ -27,6 +27,13 @@ paths:
           schema:
             type: integer
             default: 10
+        - name: limit
+          in: query
+          description: 限制回傳最大筆數（預設為空）
+          required: false
+          schema:
+            type: integer
+            default: null
         - name: type
           in: query
           description: 公告分類（系統公告、最新消息）
@@ -69,7 +76,7 @@ paths:
                         id:
                           type: string
                           description: 公告唯一識別碼
-                          example: "20240115"
+                          example: "2024011501"
                         title:
                           type: string
                           description: 公告標題
