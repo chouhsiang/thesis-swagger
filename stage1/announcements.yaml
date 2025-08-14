@@ -1,5 +1,3 @@
-# swagger.yaml
-
 openapi: 3.0.3
 info:
   title: 「新世代博碩士論文網」最新公告 API
