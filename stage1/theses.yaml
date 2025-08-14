@@ -2,11 +2,11 @@
 
 openapi: 3.0.3
 info:
-  title: Taiwan Thesis Pulse 單篇論文內容 API
+  title: 「新世代博碩士論文網」論文 API
   description: 提供單篇論文詳細內容
   version: 1.0.0
 servers:
-  - url: https://api.taiwan-thesis-pulse.lovable.app
+  - url: ndltd.ncl.edu.tw
 paths:
   /api/theses/{id}:
     get:

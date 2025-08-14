@@ -38,3 +38,29 @@
 | ---------------- | ----------- | ----------- | ---------- |
 | announcement\_id | VARCHAR(20) | 公告 ID | 2024011501 |
 | tag\_id          | BIGINT      | 標籤 ID（FK）   | 1          |
+
+### 4. theses（論文）
+| 欄位名稱                  | 資料型別           | 說明         | 範例                                               |
+| --------------------- | -------------- | ---------- | ------------------------------------------------ |
+| id                    | VARCHAR(64)    | 論文唯一識別碼    | `"1"`                                            |
+| title                 | VARCHAR(512)   | 論文標題       | `"台灣博碩士論文網發展現況與展望"`                              |
+| author                | VARCHAR(256)   | 作者         | `"王小明"`                                          |
+| school                | VARCHAR(256)   | 學校         | `"國立臺灣大學"`                                       |
+| degree                | ENUM(碩士/博士/其他) | 學位         | `"碩士"`                                           |
+| type                  | VARCHAR(64)    | 論文類型       | `"學術"`                                           |
+| college               | VARCHAR(256)   | 學院         | `"工學院"`                                          |
+| department            | VARCHAR(256)   | 系所         | `"資訊工程學系"`                                       |
+| advisor               | VARCHAR(256)   | 指導教授       | `"陳大明"`                                          |
+| language              | VARCHAR(64)    | 論文語言       | `"中文"`                                           |
+| year                  | SMALLINT       | 年度（民國年）    | `113`                                            |
+| abstract              | MEDIUMTEXT     | 摘要         | `"本論文探討..."`                                     |
+| abstract\_en          | MEDIUMTEXT     | 英文摘要       | `"With the rapid development..."`                |
+| keywords              | JSON           | 關鍵字陣列      | `["論文網", "台灣", "Open Access"]`                   |
+| keywords\_en          | JSON           | 英文關鍵字陣列    | `["Natural Language Processing", "Open Access"]` |
+| full\_text\_url       | VARCHAR(1024)  | 全文下載連結     | `"https://.../1.pdf"`                            |
+| full\_text\_available | TINYINT(1)     | 是否有全文（0/1） | `1`                                              |
+| view\_count           | INT            | 被點閱數       | `1200`                                           |
+| download\_count       | INT            | 下載數        | `800`                                            |
+| reference\_count      | INT            | 被引用數       | `25`                                             |
+| created\_at           | DATETIME       | 建立時間       | `2025-08-14 10:00:00`                            |
+| updated\_at           | DATETIME       | 更新時間       | `2025-08-14 10:00:00`                            |
