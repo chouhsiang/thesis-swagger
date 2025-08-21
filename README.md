@@ -5,6 +5,11 @@
 ### 階段一：國圖設定階段
 ### 階段二：學校設定階段
 ### 階段三：論文提交階段
+
+- [上傳論文](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage3/thesis.yaml)
+- [靜態資源](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage3/static.yaml)
+
+
 ### 階段四：論文審查階段
 ### 階段五：論文送存階段
 ### 階段六：書目管理階段

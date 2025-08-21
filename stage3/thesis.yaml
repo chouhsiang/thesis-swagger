@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: 國圖論文上傳 API
+  version: 1.0.0
+  description: 學位論文上傳流程 API（JSend 格式）
+
+servers:
+  - url: http://localhost:3000/api
+
+paths:
+  /thesis/uploadFile:
+    post:
+      summary: 上傳論文主檔與補充資料
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                thesisFile:
+                  type: string
+                  format: binary
+                  description: 論文 PDF 主檔
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: 補充資料（圖片、程式碼、附檔等）
+      responses:
+        '200':
+          description: 上傳成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [success] }
+                  data:
+                    type: object
+                    properties:
+                      uploadId: { type: string, example: "abc123" }
+
+  /thesis/submit:
+    post:
+      summary: 上傳論文相關文字資料（學籍 / 論文資料 / 摘要 / 目錄 / 參考文獻）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student:
+                  type: object
+                  properties:
+                    school: { type: string, example: "國立台北科技大學" }
+                    department: { type: string, example: "資訊工程系" }
+                    degree: { type: string, example: "碩士" }
+                    academicYear: { type: string, example: "113年度" }
+                    nameZh: { type: string, example: "陳小明" }
+                    nameEn: { type: string, example: "CHEN, SIAO-MING" }
+                    studentId: { type: string, example: "M110123456" }
+                thesis:
+                  type: object
+                  properties:
+                    titleZh: { type: string, example: "我的論文題目" }
+                    titleEn: { type: string, example: "My thesis title" }
+                    advisor: { type: string }
+                    advisorEn: { type: string }
+                    committee: { type: array, items: { type: string } }
+                    language: { type: string }
+                    pageCount: { type: integer }
+                    referenceCount: { type: integer }
+                abstract:
+                  type: object
+                  properties:
+                    abstractZh: { type: string }
+                    abstractEn: { type: string }
+                    keywordsZh: { type: array, items: { type: string } }
+                    keywordsEn: { type: array, items: { type: string } }
+                toc:
+                  type: string
+                  example: "目錄的 markdown"
+                references:
+                  type: string
+                  example: "參考文獻的 markdown"
+      responses:
+        '200':
+          description: 資料儲存成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [success] }
+                  data:
+                    type: object
+                    properties:
+                      thesisId: { type: string, example: "thesis-001" }
+
+  /thesis/authorization:
+    post:
+      summary: 設定論文授權與公開方式
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schoolAuthorization:
+                  type: object
+                  description: 對學校授權
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["agree", "saveOnly"]
+                      example: "agree"
+                    scope:
+                      type: string
+                      enum: ["campus", "global"]
+                      example: "campus"
+                nclAuthorization:
+                  type: object
+                  description: 對國家圖書館授權
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["agree", "saveOnly"]
+                      example: "agree"
+                thirdPartyAuthorization:
+                  type: object
+                  description: 對第三方資料庫授權
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["paid", "free", "deny"]
+                      example: "deny"
+                publishSetting:
+                  type: object
+                  description: 延伸公開設定
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["immediate", "delayed"]
+                      example: "immediate"
+      responses:
+        '200':
+          description: 儲存成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      thesisId:
+                        type: string
+                        example: "thesis-001"
