@@ -1,13 +1,20 @@
 # 新世代博碩士論文網 API
 
 ## Swagger 
-### 階段一
-- [最新公告](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/announcements.yaml)
-- [論文統計](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/statistics.yaml)
-- [排行榜](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/rankings.yaml)
-- [論文](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/theses.yaml)
-- [會員](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/my.yaml)
-- [申請](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage1/apply.yaml)
+
+### 階段一：國圖設定階段
+### 階段二：學校設定階段
+### 階段三：論文提交階段
+### 階段四：論文審查階段
+### 階段五：論文送存階段
+### 階段六：書目管理階段
+### 階段七：公開檢索階段
+- [最新公告](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage7/announcements.yaml)
+- [論文統計](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage7/statistics.yaml)
+- [排行榜](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage7/rankings.yaml)
+- [論文](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage7/theses.yaml)
+- [會員](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage7/my.yaml)
+- [申請](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage7/apply.yaml)
 
 
 ## 資料庫
