@@ -164,3 +164,142 @@ paths:
                       thesisId:
                         type: string
                         example: "thesis-001"
+
+
+  /thesis/rejections:
+    get:
+      summary: 取得退件理由
+      description: 取得使用者論文退件的歷史紀錄，包含退件日期、審查員、退件原因與標記。
+      responses:
+        '200':
+          description: 成功回傳退件紀錄
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                          example: "2025-07-18"
+                        reviewer:
+                          type: string
+                          example: "國家圖書館 王審查員"
+                        reasons:
+                          type: array
+                          items:
+                            type: string
+                          example:
+                            - 論文資料不完整：缺少中文標題、英文標題、教授名稱、目錄、頁數或參考文獻
+                            - 頁面標記錯誤
+                        notes:
+                          type: string
+                          example: "輸入錯誤原因輸入錯誤原因輸入錯誤原因..."
+                        status:
+                          type: string
+                          enum: [已退件, 已核准]
+                          example: 已退件
+        '400':
+          description: 請求錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [fail]
+                    example: fail
+                  data:
+                    type: object
+                    additionalProperties: true
+                    example:
+                      message: 缺少必要參數
+
+
+
+  /thesis/replace:
+    post:
+      summary: 提交論文更換/補充申請
+      description: 學生可提交修改內容簡述與指導教授同意證明文件，送交系統審核，成功後可重新上傳論文檔案。
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: 修改內容簡述
+                  example: 修正論文標題與補充缺少的參考文獻
+                approvalFile:
+                  type: string
+                  format: binary
+                  description: 指導教授同意證明文件 (PDF, JPG, PNG)
+      responses:
+        '200':
+          description: 申請成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      requestId:
+                        type: string
+                        example: "REQ-20250822-001"
+                      submittedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T07:45:00Z"
+                      message:
+                        type: string
+                        example: 申請已送出，請等待系統審核
+        '400':
+          description: 請求錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [fail]
+                    example: fail
+                  data:
+                    type: object
+                    example:
+                      message: 缺少必要參數 (description 或 approvalFile)
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [error]
+                    example: error
+                  message:
+                    type: string
+                    example: 系統發生錯誤，請稍後再試
+                  code:
+                    type: integer
+                    example: 500
