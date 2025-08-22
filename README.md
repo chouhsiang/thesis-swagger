@@ -8,6 +8,7 @@
 
 - [上傳論文](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage3/thesis.yaml)
 - [靜態資源](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage3/static.yaml)
+- [個人資料](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage3/my.yaml)
 
 
 ### 階段四：論文審查階段
