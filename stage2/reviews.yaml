@@ -1,0 +1,134 @@
+openapi: 3.0.3
+info:
+  title: 論文審核 API
+  version: 1.0.0
+  description: 提供論文清單查詢與審核操作，回應統一為 JSend 格式。
+
+servers:
+  - url: https://api.ndl.example.com/v1
+
+paths:
+  /schools/{schoolId}/reviews:
+    get:
+      summary: 查詢審核論文清單
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+        - name: keyword
+          in: query
+          schema: { type: string }
+          example: "深度學習"
+        - name: status
+          in: query
+          schema: { type: string, enum: [待審核, 審核中, 已通過, 已退件] }
+          example: "待審核"
+        - name: startDate
+          in: query
+          schema: { type: string, format: date }
+          example: "2024-07-01"
+        - name: endDate
+          in: query
+          schema: { type: string, format: date }
+          example: "2024-07-31"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+  /schools/{schoolId}/reviews/{thesisId}:
+    get:
+      summary: 取得單篇論文詳細資訊
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: thesisId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+  /schools/{schoolId}/reviews/{thesisId}/decision:
+    post:
+      summary: 論文審核決定
+      description: 審核人員對單篇論文做出「通過 / 失敗」決定
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+        - name: thesisId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "thesis123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                decision:
+                  type: string
+                  enum: [approved, rejected]
+                  example: approved
+                reason:
+                  type: string
+                  example: "格式正確，內容符合要求"
+      responses:
+        "200":
+          description: 決定成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+        "400":
+          description: 決定失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendFail'
+
+components:
+  schemas:
+    ReviewItem:
+      type: object
+      properties:
+        id: { type: string, example: "thesis123" }
+        department: { type: string, example: "資訊工程學系" }
+        studentName: { type: string, example: "陳小明" }
+        studentId: { type: string, example: "M110123456" }
+        title: { type: string, example: "基於深度學習的自然語言處理研究" }
+        status: { type: string, example: "待審核" }
+        submittedAt: { type: string, format: date-time, example: "2024-07-28T14:32:00" }
+
+    # --- JSend 格式 ---
+    JSendSuccess:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        data:
+          oneOf:
+            - type: array
+              items: { $ref: '#/components/schemas/ReviewItem' }
+            - type: object
+              properties:
+                message: { type: string, example: "審核已完成" }
+
+    JSendFail:
+      type: object

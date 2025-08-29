@@ -1,0 +1,78 @@
+openapi: 3.0.3
+info:
+  title: 首頁 Dashboard API
+  version: 1.0.0
+  description: 回傳使用者首頁資訊，包括個人資料、審查狀態與可用功能卡片。
+
+servers:
+  - url: https://api.ndl.example.com/v1
+
+paths:
+  /schools/{schoolId}/my:
+    get:
+      summary: 取得使用者首頁資訊
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "ntu"
+      responses:
+        "200":
+          description: 成功取得
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+components:
+  schemas:
+    Dashboard:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            name: { type: string, example: "王頌華" }
+            role: { type: string, example: "管理員" }
+            school: { type: string, example: "國立台灣大學" }
+        reviewStatus:
+          type: object
+          properties:
+            pending: { type: integer, example: 36 }
+            approved: { type: integer, example: 12 }
+            rejected: { type: integer, example: 2 }
+            replacement: { type: integer, example: 2 }
+        functions:
+          type: array
+          description: 使用者可用功能清單
+          items:
+            type: object
+            properties:
+              code: { type: string, example: "thesis_review" }
+              name: { type: string, example: "研究生論文審查" }
+              description: { type: string, example: "待審核文章，進行系統及內容審查" }
+              count: { type: integer, example: 36 }
+              icon: { type: string, example: "mdi-book-search" }
+              link: { type: string, example: "/thesis/review" }
+
+    # --- JSend 格式 ---
+    JSendSuccess:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        data:
+          $ref: '#/components/schemas/Dashboard'
+
+    JSendFail:
+      type: object
+      properties:
+        status: { type: string, example: fail }
+        data: { type: object, example: { error: "User not authorized" } }
+
+    JSendError:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        message: { type: string, example: Internal server error }

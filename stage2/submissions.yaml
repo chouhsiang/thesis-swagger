@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: 送存國家圖書館 API
+  version: 1.0.0
+  description: 提供論文送存國家圖書館的清單查詢、送存提交與紀錄查詢。
+
+servers:
+  - url: https://api.ndl.example.com/v1
+
+paths:
+  /schools/{schoolId}/submissions:
+    get:
+      summary: 取得送存清單
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+    post:
+      summary: 執行送存
+      description: 批次送存多篇論文到國家圖書館
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                thesisIds:
+                  type: array
+                  items: { type: string }
+                  example: ["thesis123", "thesis124", "thesis125"]
+      responses:
+        "201":
+          description: 送存成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+  /schools/{schoolId}/submissions/history:
+    get:
+      summary: 查詢送存紀錄
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+  /schools/{schoolId}/submissions/history/{historyId}/download:
+    get:
+      summary: 下載送存檔案
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+        - name: historyId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "sub20250812-001"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+components:
+  schemas:
+    SubmissionItem:
+      type: object
+      properties:
+        id: { type: string, example: "thesis123" }
+        department: { type: string, example: "資訊工程學系" }
+        studentName: { type: string, example: "陳小明" }
+        studentId: { type: string, example: "M110123456" }
+        title: { type: string, example: "基於深度學習的自然語言處理研究" }
+        status: { type: string, example: "立即公開" }
+        schoolConfirm: { type: string, example: "授權" }
+        nclConfirm: { type: string, example: "授權" }
+        thirdParty: { type: string, example: "不授權" }
+
+    SubmissionHistory:
+      type: object
+      properties:
+        id: { type: string, example: "sub20250812-001" }
+        submittedAt: { type: string, format: date, example: "2025-08-12" }
+        user: { type: string, example: "王頌華" }
+        role: { type: string, example: "管理員" }
+        count: { type: integer, example: 100 }
+
+    # --- JSend 格式 ---
+    JSendSuccess:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        data:
+          oneOf:
+            - type: array
+              items: { $ref: '#/components/schemas/SubmissionItem' }
+            - type: array
+              items: { $ref: '#/components/schemas/SubmissionHistory' }
+            - type: object
+              properties:
+                message: { type: string, example: "送存成功，共 100 筆" }
+
+    JSendFail:
+      type: object
+      properties:
+        status: { type: string, example: fail }
+        data: { type: object, example: { reason: "部分論文缺少授權，無法送存" } }
+
+    JSendError:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        message: { type: string, example: Internal server error }

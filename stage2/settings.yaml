@@ -1,0 +1,161 @@
+openapi: 3.0.3
+info:
+  title: 學校論文上傳與授權設定 API
+  version: 1.4.0
+  description: 每個學校可設定獨立的論文上傳規則與授權設定。回應統一為 JSend 格式。
+
+servers:
+  - url: https://api.ndl.example.com/v1
+
+paths:
+  /{schoolId}/thesis-settings:
+    get:
+      summary: 取得學校論文設定
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "ntu"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+    post:
+      summary: 建立或更新學校論文設定
+      description: 若該學校已存在設定，會覆蓋舊設定。
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "ntu"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThesisSetting'
+      responses:
+        "201":
+          description: 寫入成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+        "400":
+          description: 驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendFail'
+        "500":
+          description: 系統錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendError'
+
+components:
+  schemas:
+    ThesisSetting:
+      type: object
+      properties:
+        reviewFlow: { type: string, enum: [library_only, department_then_library], example: library_only }
+        formatLimit:
+          type: object
+          properties:
+            allowedTypes: { type: array, items: { type: string }, example: ["pdf", "docx", "txt"] }
+            maxFileSizeMB: { type: integer, example: 100 }
+        faqs:
+          type: array
+          items:
+            type: object
+            properties:
+              question: { type: string, example: "上傳後能修改嗎？" }
+              answer: { type: string, example: "期限內可刪除舊檔重新上傳。" }
+        relatedDocs:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string, example: "建檔流程" }
+              fileName: { type: string, example: "workflow_v1.pdf" }
+        watermark:
+          type: object
+          properties:
+            type: { type: string, enum: [text, image], example: text }
+            text: { type: string, example: "僅供審查使用" }
+            fontSize: { type: integer, example: 14 }
+            opacity: { type: integer, example: 56 }
+            position: { type: string, example: center }
+            imageUrl: { type: string, example: "https://files.ndl.example.com/wm/logo.png" }
+        advancedFields:
+          type: array
+          example: ["keywords", "abstract", "language", "reference"]
+        supplemental:
+          type: object
+          properties:
+            enabled: { type: boolean, example: true }
+            allowedTypes: { type: array, items: { type: string }, example: ["pdf", "txt"] }
+            maxFileSizeMB: { type: integer, example: 30 }
+        thesisReplacement:
+          type: object
+          properties:
+            requiredDocs: { type: boolean, example: true }
+            requiredReason: { type: boolean, example: true }
+            descriptions:
+              type: array
+              items:
+                type: object
+                properties:
+                  title: { type: string, example: "提供相關的證明文件" }
+                  content: { type: string, example: "請上傳相關證明檔案，以利審核。" }
+        thirdPartyAuthorization:
+          type: object
+          properties:
+            enabled: { type: boolean, example: false }
+        onlineAgreement:
+          type: object
+          properties:
+            copyrightStatement: { type: string, example: "本人確認論文授權..." }
+            extraDeclaration: { type: string, example: "其他授權說明..." }
+        schoolEThesis:
+          type: object
+          properties:
+            options: { type: array, items: { type: string }, example: ["internet_immediate", "campus_immediate"] }
+        nclEThesis:
+          type: object
+          properties:
+            options: { type: array, items: { type: string }, example: ["immediate"] }
+        publicScope:
+          type: object
+          properties:
+            enabled: { type: boolean, example: true }
+            items: { type: array, items: { type: string }, example: ["fulltext", "bibliographic", "toc"] }
+
+    # --- JSend 格式 ---
+    JSendSuccess:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        data:
+          $ref: '#/components/schemas/ThesisSetting'
+
+    JSendFail:
+      type: object
+      properties:
+        status: { type: string, example: fail }
+        data: { type: object, example: { field: "maxFileSizeMB", error: "必須 10-100 MB" } }
+
+    JSendError:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        message: { type: string, example: Internal server error }

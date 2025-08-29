@@ -1,0 +1,119 @@
+openapi: 3.0.3
+info:
+  title: 全校論文書冊管理 API
+  version: 1.0.0
+  description: 提供全校論文清單查詢、篩選與抽換功能，回應統一為 JSend 格式。
+
+servers:
+  - url: https://api.ndl.example.com/v1
+
+paths:
+  /schools/{schoolId}/theses:
+    get:
+      summary: 查詢論文清單
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+        - name: department
+          in: query
+          schema: { type: string }
+          example: "資訊工程學系"
+        - name: startDate
+          in: query
+          schema: { type: string, format: date }
+          example: "2024-01-01"
+        - name: endDate
+          in: query
+          schema: { type: string, format: date }
+          example: "2024-12-31"
+        - name: status
+          in: query
+          schema: { type: string, enum: [公開, 限制, 隱藏] }
+          example: "公開"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+  /schools/{schoolId}/theses/{thesisId}/replace:
+    post:
+      summary: 抽換論文
+      description: 對單篇論文進行抽換，需確認相關條件。
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+        - name: thesisId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "thesis123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm:
+                  type: boolean
+                  example: true
+      responses:
+        "200":
+          description: 抽換成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+        "400":
+          description: 無法抽換
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendFail'
+
+components:
+  schemas:
+    Thesis:
+      type: object
+      properties:
+        id: { type: string, example: "thesis123" }
+        department: { type: string, example: "資訊工程學系" }
+        studentName: { type: string, example: "陳小明" }
+        studentId: { type: string, example: "M110123456" }
+        title: { type: string, example: "基於深度學習的自然語言處理研究" }
+        status: { type: string, example: "公開" }
+        publishDate: { type: string, format: date, example: "2024-04-22" }
+
+    # --- JSend 格式 ---
+    JSendSuccess:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        data:
+          oneOf:
+            - type: array
+              items: { $ref: '#/components/schemas/Thesis' }
+            - type: object
+              properties:
+                message: { type: string, example: "抽換成功" }
+
+    JSendFail:
+      type: object
+      properties:
+        status: { type: string, example: fail }
+        data: { type: object, example: { reason: "該論文不符合抽換條件" } }
+
+    JSendError:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        message: { type: string, example: Internal server error }

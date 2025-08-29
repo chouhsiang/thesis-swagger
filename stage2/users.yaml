@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: 人員權限管理 API
+  version: 1.0.0
+  description: 提供人員權限管理，包括新增、編輯、刪除與查詢使用者，回應格式統一為 JSend。
+
+servers:
+  - url: https://api.ndl.example.com/v1
+
+paths:
+  /users:
+    get:
+      summary: 取得使用者清單
+      description: 查詢所有使用者及其角色、權限設定。
+      responses:
+        "200":
+          description: 成功取得清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccessList'
+
+    post:
+      summary: 新增人員
+      description: 新增一位新使用者並設定角色與權限。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        "201":
+          description: 新增成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+        "400":
+          description: 新增失敗 (例如 email 已存在)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendFail'
+        "500":
+          description: 系統錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendError'
+
+  /users/{userId}:
+    get:
+      summary: 取得使用者資訊
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功取得使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+        "404":
+          description: 找不到使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendFail'
+
+    put:
+      summary: 編輯使用者權限
+      description: 更新使用者角色與權限。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+        "400":
+          description: 更新失敗 (例如 權限格式錯誤)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendFail'
+        "500":
+          description: 系統錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendError'
+
+    delete:
+      summary: 刪除使用者
+      description: 移除使用者帳號。
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 刪除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+        "404":
+          description: 找不到使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendFail'
+
+  /permissions:
+    get:
+      summary: 取得可用權限清單
+      description: 回傳系統中所有可分配的權限項目，供前端動態載入。
+      responses:
+        "200":
+          description: 成功取得權限清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccessList'
+
+components:
+  schemas:
+    Permission:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 權限名稱
+          example: "研究生論文審查"
+        level:
+          type: string
+          description: 權限層級
+          enum: [viewer, editor]
+          example: editor
+
+    PermissionOption:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 權限名稱
+          example: "人員帳號管理"
+        description:
+          type: string
+          description: 權限說明
+          example: "管理與編輯使用者帳號資訊"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "u123456"
+        name:
+          type: string
+          example: "王頌華"
+        email:
+          type: string
+          example: "abc1221@gmail.com"
+        role:
+          type: string
+          enum: [管理員, 審查人員, 工讀生, 系所人員, 其他]
+          example: 管理員
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    UserCreate:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+          example: "陳小明"
+        email:
+          type: string
+          example: "test@example.com"
+        role:
+          type: string
+          enum: [管理員, 審查人員, 工讀生, 系所人員, 其他]
+          example: 審查人員
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    UserUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [管理員, 審查人員, 工讀生, 系所人員, 其他]
+          example: 工讀生
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    # ---- JSend 標準格式 ----
+    JSendSuccess:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          $ref: '#/components/schemas/User'
+
+    JSendSuccessList:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/User'
+              - $ref: '#/components/schemas/PermissionOption'
+
+    JSendFail:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        data:
+          type: object
+          example:
+            email: "已存在"
+
+    JSendError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Internal server error

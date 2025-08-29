@@ -1,0 +1,124 @@
+openapi: 3.0.3
+info:
+  title: 論文統計報表 API
+  version: 1.0.0
+  description: 提供論文統計報表篩選、產生與匯出功能，回應統一為 JSend 格式。
+
+servers:
+  - url: https://api.ndl.example.com/v1
+
+paths:
+  /schools/{schoolId}/reports:
+    post:
+      summary: 產生論文統計報表
+      description: 傳入篩選條件，系統回傳預覽資料。
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: 報表類型
+                  enum: [授權率, 法遵率, 工作項目, 指導教授, 論文報表查詢, 機構典藏]
+                  example: 工作項目
+                year:
+                  type: string
+                  example: "2024"
+                month:
+                  type: string
+                  example: "07"
+                department:
+                  type: string
+                  example: "資訊工程學系"
+                advisor:
+                  type: string
+                  example: "李教授"
+                range:
+                  type: object
+                  properties:
+                    startDate: { type: string, format: date, example: "2024-07-01" }
+                    endDate: { type: string, format: date, example: "2024-07-31" }
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSendSuccess'
+
+  /schools/{schoolId}/reports/export:
+    post:
+      summary: 匯出統計報表
+      description: 將篩選條件對應的報表匯出成檔案
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema: { type: string }
+          example: "ntu"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [授權率, 法遵率, 工作項目, 指導教授, 論文報表查詢, 機構典藏]
+                  example: 工作項目
+                year: { type: string, example: "2024" }
+                month: { type: string, example: "07" }
+                department: { type: string, example: "資訊工程學系" }
+      responses:
+        "200":
+          description: 匯出成功
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+components:
+  schemas:
+    ReportRow:
+      type: object
+      properties:
+        id: { type: string, example: "1754380739" }
+        year: { type: string, example: "113" }
+        department: { type: string, example: "資訊工程學系" }
+        title: { type: string, example: "基於深度學習的自然語言處理研究" }
+        student: { type: string, example: "陳小明" }
+        advisor: { type: string, example: "李教授" }
+        status: { type: string, example: "公開" }
+        reviewedAt: { type: string, format: date-time, example: "2025-07-15T15:59:00" }
+
+    # --- JSend 格式 ---
+    JSendSuccess:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/ReportRow' }
+
+    JSendFail:
+      type: object
+      properties:
+        status: { type: string, example: fail }
+        data: { type: object, example: { reason: "缺少年度參數" } }
+
+    JSendError:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        message: { type: string, example: Internal server error }
