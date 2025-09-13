@@ -18,7 +18,7 @@ paths:
           schema:
             type: integer
             default: 1
-        - name: pageSize
+        - name: per_page
           in: query
           description: 每頁筆數（預設為 10）
           required: false
