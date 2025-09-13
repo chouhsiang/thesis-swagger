@@ -4,6 +4,12 @@
 
 ### 階段一：國圖設定階段
 
+
+
+
+### 階段二：學校設定階段
+
+
 - [個人資料](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage2/my.yaml)
 - [人員管理](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage2/users.yaml)
 - [系統設定](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage2/settings.yaml)
@@ -12,9 +18,6 @@
 - [論文審查](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage2/reviews.yaml)
 - [送存國圖](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage2/submissions.yaml)
 
-
-
-### 階段二：學校設定階段
 ### 階段三：論文提交階段
 
 - [上傳論文](https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/chouhsiang/thesis-swagger/main/stage3/thesis.yaml)

@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: 「新世代博碩士論文網」最新公告 API
-  description: 提供最新公告列表與公告詳細內容
+  title: 「新世代博碩士論文網」最新公告 API (Cloudflare 風格)
+  description: 提供最新公告列表與公告詳細內容，回應結構採 Cloudflare API 慣例
   version: 1.0.0
 servers:
-  - url: ndltd.ncl.edu.tw
+  - url: https://ndltd.ncl.edu.tw
 paths:
   /api/announcements:
     get:
@@ -25,13 +25,6 @@ paths:
           schema:
             type: integer
             default: 10
-        - name: limit
-          in: query
-          description: 限制回傳最大筆數（預設為空）
-          required: false
-          schema:
-            type: integer
-            default: null
         - name: type
           in: query
           description: 公告分類（系統公告、最新消息）
@@ -54,59 +47,121 @@ paths:
               schema:
                 type: object
                 properties:
-                  total:
-                    type: integer
-                    description: 公告總數
-                    example: 1
-                  page:
-                    type: integer
-                    description: 當前頁碼
-                    example: 1
-                  pageSize:
-                    type: integer
-                    description: 每頁筆數
-                    example: 10
-                  data:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
                     type: array
                     items:
                       type: object
                       properties:
                         id:
                           type: string
-                          description: 公告唯一識別碼
                           example: "2024011501"
                         title:
                           type: string
-                          description: 公告標題
                           example: "系統維護公告"
                         type:
                           type: string
-                          description: 公告分類
                           example: "系統公告"
                         tags:
                           type: array
-                          description: 公告標籤
                           items:
                             type: string
                           example: ["重要"]
                         summary:
                           type: string
-                          description: 公告短內容
-                          example: "2024/01/15 凌晨2:00-4:00系統維護，暫停服務"
+                          example: "2024/01/15 凌晨2:00-4:00 系統維護，暫停服務"
                         date:
                           type: string
                           format: date
-                          description: 公告日期
                           example: "2024-01-15"
+                  result_info:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 10
+                      count:
+                        type: integer
+                        example: 1
+                      total_count:
+                        type: integer
+                        example: 200
         '400':
           description: 錯誤的請求參數
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1001
+                        message:
+                          type: string
+                          example: "Invalid query parameter"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    nullable: true
         '500':
           description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1002
+                        message:
+                          type: string
+                          example: "Internal server error"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    nullable: true
 
   /api/announcements/{id}:
     get:
       summary: 取得公告詳細內容
-      description: 依公告 id 取得完整公告內容，包含 summary 與 content
+      description: 依公告 id 取得完整公告內容
       parameters:
         - name: id
           in: path
@@ -123,41 +178,33 @@ paths:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: string
-                    description: 公告唯一識別碼
-                    example: "20240115"
-                  title:
-                    type: string
-                    description: 公告標題
-                    example: "系統維護公告"
-                  type:
-                    type: string
-                    description: 公告分類
-                    example: "系統公告"
-                  tags:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
                     type: array
-                    description: 公告標籤
                     items:
-                      type: string
-                    example: ["重要"]
-                  summary:
-                    type: string
-                    description: 公告短內容
-                    example: "2024/01/15 凌晨2:00-4:00系統維護，暫停服務"
-                  content:
-                    type: string
-                    description: 公告完整內容
-                    example: "2024/01/15 凌晨2:00-4:00進行系統維護，期間將暫停服務，請提前儲存資料。"
-                  date:
-                    type: string
-                    format: date
-                    description: 公告日期
-                    example: "2024-01-15"
-        '404':
-          description: 找不到該公告
-        '400':
-          description: 錯誤的請求參數
-        '500':
-          description: 伺服器錯誤
-components: {}
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "20240115"
+                      title:
+                        type: string
+                        example: "系統維護公告"
+                      type:
+                        type: string
+                        example: "系統公告"
+                      tags:
+                        type: array
+                        items:
+                          type: string
+                        example: ["重要"]
