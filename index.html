@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Swagger UI</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui.css"
+    />
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+      window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        const specUrl = params.get("file");
+
+        SwaggerUIBundle({
+          url: specUrl,
+          dom_id: "#swagger-ui",
+        });
+      };
+    </script>
+  </body>
+</html>
