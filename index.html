@@ -11,16 +11,25 @@
   <body>
     <div id="swagger-ui"></div>
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+
     <script>
       window.onload = () => {
-        const params = new URLSearchParams(window.location.search);
-        const specUrl = params.get("file");
-
         SwaggerUIBundle({
-          url: specUrl,
+          urls: [
+            { url: "ndltd/reader.yaml", name: "博碩士論文系統 讀者端" },
+            { url: "stage2/me.yaml", name: "博碩士論文系統 國圖端" },
+            { url: "stage2/me.yaml", name: "博碩士論文系統 對外API介接服務" },
+            { url: "stage2/me.yaml", name: "大學論文系統 入口頁" },
+            { url: "stage2/me.yaml", name: "大學論文系統 學校端" },
+            { url: "stage2/me.yaml", name: "大學論文系統 學生端" },
+            { url: "stage2/me.yaml", name: "大學論文系統 檢索端" },
+          ],
           dom_id: "#swagger-ui",
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: "StandaloneLayout",
         });
       };
     </script>
   </body>
-</html>
+</html
