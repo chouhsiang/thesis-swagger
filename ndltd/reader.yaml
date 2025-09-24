@@ -371,12 +371,12 @@ paths:
 
 
 
-  # 收藏管理 API
+  # 書車管理 API
   /savedtheses:
     get:
-      tags: [收藏管理]
+      tags: [書車]
       summary: 我的書車
-      description: 取得使用者收藏的論文列表
+      description: 取得使用者書車的論文列表
       security:
         - bearerAuth: []
       parameters:
@@ -402,8 +402,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SavedThesesResponse'
     post:
-      tags: [收藏管理]
-      summary: 新增一筆收藏
+      tags: [書車管理]
+      summary: 新增一筆書車
       description: 新增一篇論文到我的書車
       security:
         - bearerAuth: []
@@ -421,7 +421,7 @@ paths:
                   example: "1"
       responses:
         '200':
-          description: 成功新增收藏
+          description: 成功新增書車
           content:
             application/json:
               schema:
@@ -429,9 +429,9 @@ paths:
 
   /savedtheses/{id}:
     delete:
-      tags: [收藏管理]
-      summary: 刪除一筆收藏
-      description: 刪除一篇已收藏的論文
+      tags: [書車管理]
+      summary: 刪除一筆書車
+      description: 刪除一篇已書車的論文
       security:
         - bearerAuth: []
       parameters:
@@ -443,7 +443,7 @@ paths:
           description: 論文唯一識別碼
       responses:
         '200':
-          description: 成功刪除收藏
+          description: 成功刪除書車
           content:
             application/json:
               schema:
