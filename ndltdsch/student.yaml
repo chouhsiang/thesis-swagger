@@ -1,0 +1,556 @@
+openapi: 3.0.3
+info:
+  title: 大學論文系統 學生端
+  description: 學生端論文上傳、個人資料管理、常見問答等功能 API
+  version: 1.0.0
+  contact:
+    name: Github 原始碼
+    url: https://github.com/chouhsiang/thesis-swagger
+
+servers:
+  - url: https://ndltdsch.ncl.edu.tw/api/v1/{school}/student
+    description: 正式環境
+
+paths:
+  # 個人資料管理 API
+  /auth/me:
+    get:
+      tags: [個人資料]
+      summary: 取得個人資訊
+      description: 回傳使用者的個人資訊，包含姓名、信箱、學校、科系、階段與論文最後提交時間
+      responses:
+        '200':
+          description: 成功回傳個人資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    $ref: '#/components/schemas/User'
+
+  # 論文上傳管理 API
+  /thesis/uploadFile:
+    post:
+      tags: [論文上傳]
+      summary: 上傳論文主檔與補充資料
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                thesisFile:
+                  type: string
+                  format: binary
+                  description: 論文 PDF 主檔
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: 補充資料（圖片、程式碼、附檔等）
+      responses:
+        '200':
+          description: 上傳成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      uploadId: 
+                        type: string
+                        example: "abc123"
+
+  /thesis/submit:
+    post:
+      tags: [論文上傳]
+      summary: 上傳論文相關文字資料
+      description: 上傳學籍資料、論文資料、摘要、目錄、參考文獻等
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student:
+                  type: object
+                  properties:
+                    school: 
+                      type: string
+                      example: "國立台北科技大學"
+                    department: 
+                      type: string
+                      example: "資訊工程系"
+                    degree: 
+                      type: string
+                      example: "碩士"
+                    academicYear: 
+                      type: string
+                      example: "113年度"
+                    nameZh: 
+                      type: string
+                      example: "陳小明"
+                    nameEn: 
+                      type: string
+                      example: "CHEN, SIAO-MING"
+                    studentId: 
+                      type: string
+                      example: "M110123456"
+                thesis:
+                  type: object
+                  properties:
+                    titleZh: 
+                      type: string
+                      example: "我的論文題目"
+                    titleEn: 
+                      type: string
+                      example: "My thesis title"
+                    advisor: 
+                      type: string
+                      description: 指導教授中文姓名
+                    advisorEn: 
+                      type: string
+                      description: 指導教授英文姓名
+                    committee: 
+                      type: array
+                      items: 
+                        type: string
+                      description: 口試委員名單
+                    language: 
+                      type: string
+                      description: 論文語言
+                    pageCount: 
+                      type: integer
+                      description: 論文頁數
+                    referenceCount: 
+                      type: integer
+                      description: 參考文獻數量
+                abstract:
+                  type: object
+                  properties:
+                    abstractZh: 
+                      type: string
+                      description: 中文摘要
+                    abstractEn: 
+                      type: string
+                      description: 英文摘要
+                    keywordsZh: 
+                      type: array
+                      items: 
+                        type: string
+                      description: 中文關鍵字
+                    keywordsEn: 
+                      type: array
+                      items: 
+                        type: string
+                      description: 英文關鍵字
+                toc:
+                  type: string
+                  description: 目錄的 markdown 格式
+                  example: "目錄的 markdown"
+                references:
+                  type: string
+                  description: 參考文獻的 markdown 格式
+                  example: "參考文獻的 markdown"
+      responses:
+        '200':
+          description: 資料儲存成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      thesisId: 
+                        type: string
+                        example: "thesis-001"
+
+  /thesis/authorization:
+    post:
+      tags: [論文上傳]
+      summary: 設定論文授權與公開方式
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schoolAuthorization:
+                  type: object
+                  description: 對學校授權
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["agree", "saveOnly"]
+                      example: "agree"
+                    scope:
+                      type: string
+                      enum: ["campus", "global"]
+                      example: "campus"
+                nclAuthorization:
+                  type: object
+                  description: 對國家圖書館授權
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["agree", "saveOnly"]
+                      example: "agree"
+                thirdPartyAuthorization:
+                  type: object
+                  description: 對第三方資料庫授權
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["paid", "free", "deny"]
+                      example: "deny"
+                publishSetting:
+                  type: object
+                  description: 延伸公開設定
+                  properties:
+                    mode:
+                      type: string
+                      enum: ["immediate", "delayed"]
+                      example: "immediate"
+      responses:
+        '200':
+          description: 儲存成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      thesisId:
+                        type: string
+                        example: "thesis-001"
+
+  /thesis/rejections:
+    get:
+      tags: [論文審查]
+      summary: 取得退件理由
+      description: 取得使用者論文退件的歷史紀錄，包含退件日期、審查員、退件原因與標記
+      responses:
+        '200':
+          description: 成功回傳退件紀錄
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                          example: "2025-07-18"
+                        reviewer:
+                          type: string
+                          example: "國家圖書館 王審查員"
+                        reasons:
+                          type: array
+                          items:
+                            type: string
+                          example:
+                            - 論文資料不完整：缺少中文標題、英文標題、教授名稱、目錄、頁數或參考文獻
+                            - 頁面標記錯誤
+                        notes:
+                          type: string
+                          example: "輸入錯誤原因輸入錯誤原因輸入錯誤原因..."
+                        status:
+                          type: string
+                          enum: [已退件, 已核准]
+                          example: 已退件
+
+  /thesis/replace:
+    post:
+      tags: [論文審查]
+      summary: 提交論文更換/補充申請
+      description: 學生可提交修改內容簡述與指導教授同意證明文件，送交系統審核，成功後可重新上傳論文檔案
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: 修改內容簡述
+                  example: 修正論文標題與補充缺少的參考文獻
+                approvalFile:
+                  type: string
+                  format: binary
+                  description: 指導教授同意證明文件 (PDF, JPG, PNG)
+      responses:
+        '200':
+          description: 申請成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      requestId:
+                        type: string
+                        example: "REQ-20250822-001"
+                      submittedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T07:45:00Z"
+                      message:
+                        type: string
+                        example: 申請已送出，請等待系統審核
+
+  # 靜態資源 API
+  /static/faqs:
+    get:
+      tags: [靜態資源]
+      summary: 取得常見問答清單
+      responses:
+        '200':
+          description: FAQ 列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        question:
+                          type: string
+                          example: "如何上傳論文？"
+                        answer:
+                          type: string
+                          example: "請點選『進入上傳系統』，依照指示完成論文上傳流程。"
+
+  /static/docs:
+    get:
+      tags: [靜態資源]
+      summary: 取得所有文件類別及其檔案清單
+      responses:
+        '200':
+          description: 文件類別與檔案清單
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: "上傳說明"
+                        files:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                example: 101
+                              name:
+                                type: string
+                                example: "論文上傳說明.pdf"
+                              url:
+                                type: string
+                                example: "https://example.com/files/101/download"
+
+components:
+  schemas:
+    # 個人資料相關 Schema
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 王小明
+        email:
+          type: string
+          format: email
+          example: test@example.com
+        school:
+          type: string
+          example: 國立台灣大學
+        department:
+          type: string
+          example: 資訊工程學系
+        stage:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        thesisSubmittedAt:
+          type: string
+          format: date-time
+          description: 論文最後提交時間 (ISO 8601 格式)
+          example: "2025-08-20T14:30:00Z"
+
+    JSendSuccessUser:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+          example: success
+        data:
+          $ref: '#/components/schemas/User'
+
+    # 通用 JSend Schema
+    JSendFail:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [fail]
+          example: fail
+        data:
+          type: object
+          additionalProperties: true
+          example:
+            message: 缺少必要參數
+
+    JSendError:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        message:
+          type: string
+          example: 伺服器發生錯誤
+        code:
+          type: integer
+          example: 500

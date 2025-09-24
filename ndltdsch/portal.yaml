@@ -1,0 +1,177 @@
+openapi: 3.0.3
+info:
+  title: 大學論文系統 入口頁
+  description: 提供系統入口與導航功能，包含公告查詢、統一身份認證、角色權限分流等功能
+  version: 1.0.0
+  contact:
+    name: Github 原始碼
+    url: https://github.com/chouhsiang/thesis-swagger
+
+servers:
+  - url: https://ndltdsch.ncl.edu.tw/api/v1
+    description: 正式環境
+
+paths:
+  # 公告管理 API
+  /announcements:
+    get:
+      tags: [公告]
+      summary: 取得公告列表
+      description: 取得公告列表，顯示短內容 summary
+      parameters:
+        - name: page
+          in: query
+          description: 分頁頁碼（預設為 1）
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數（預設為 10）
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: type
+          in: query
+          description: 公告分類（系統公告、最新消息）
+          required: false
+          schema:
+            type: string
+            enum: [系統公告, 最新消息]
+        - name: tag
+          in: query
+          description: 公告標籤（重要、新功能），可多選（以逗號分隔）
+          required: false
+          schema:
+            type: string
+            example: "重要,新功能"
+      responses:
+        '200':
+          description: 成功取得公告列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnnouncementListResponse'
+
+  /announcements/{id}:
+    get:
+      tags: [公告]
+      summary: 取得公告詳細內容
+      description: 依公告 id 取得完整公告內容
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 公告唯一識別碼
+          schema:
+            type: string
+            example: "20240115"
+      responses:
+        '200':
+          description: 成功取得公告詳細內容
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnnouncementDetailResponse'
+
+components:
+  schemas:
+    # 公告相關 Schema
+    AnnouncementListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Announcement'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    AnnouncementDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/AnnouncementDetail'
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "2024011501"
+        title:
+          type: string
+          example: "系統維護公告"
+        type:
+          type: string
+          example: "系統公告"
+        summary:
+          type: string
+          example: "系統維護通知"
+        date:
+          type: string
+          format: date
+          example: "2024-01-15"
+
+    AnnouncementDetail:
+      allOf:
+        - $ref: '#/components/schemas/Announcement'
+        - type: object
+          properties:
+            content:
+              type: string
+              description: 完整公告內容
+              example: "系統將於 2024-01-15 進行維護，維護期間系統將暫停服務..."
+
+    # 分頁資訊 Schema
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 當前頁碼
+          example: 1
+        per_page:
+          type: integer
+          description: 每頁筆數
+          example: 10
+        count:
+          type: integer
+          description: 當前頁面筆數
+          example: 10
+        total_count:
+          type: integer
+          description: 總筆數
+          example: 200
+        total_pages:
+          type: integer
+          description: 總頁數
+          example: 20

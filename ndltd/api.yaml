@@ -1,0 +1,468 @@
+openapi: 3.0.3
+info:
+  title: 博碩士論文系統 對外API介接服務
+  description: 提供論文資料的 CRUD 操作，供外部系統介接使用
+  version: 1.0.0
+  contact:
+    name: Github 原始碼
+    url: https://github.com/chouhsiang/thesis-swagger
+
+servers:
+  - url: https://ndltdapi.ncl.edu.tw/api/v1
+    description: 正式環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  # 論文 CRUD API
+  /theses:
+    get:
+      tags: [論文管理]
+      summary: 取得論文列表
+      description: 依多種條件搜尋論文，回傳論文列表
+      parameters:
+        - name: keyword
+          in: query
+          description: 關鍵字（標題、摘要、關鍵字等模糊搜尋）
+          schema:
+            type: string
+            example: "Open Access"
+        - name: school
+          in: query
+          description: 學校名稱
+          schema:
+            type: string
+            example: "國立臺灣大學"
+        - name: author
+          in: query
+          description: 作者
+          schema:
+            type: string
+            example: "王小明"
+        - name: degree
+          in: query
+          description: 學位（碩士/博士/其他）
+          schema:
+            type: string
+            enum: [碩士, 博士, 其他]
+        - name: year
+          in: query
+          description: 年度
+          schema:
+            type: integer
+            example: 113
+        - name: fullTextAvailable
+          in: query
+          description: 是否有全文
+          schema:
+            type: boolean
+            example: true
+        - name: sort
+          in: query
+          description: 排序方式
+          schema:
+            type: string
+            enum: [viewCount, downloadCount, year, relevance]
+            default: relevance
+        - name: limit
+          in: query
+          description: 限制回傳最大筆數（預設 10，最大 100）
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: offset
+          in: query
+          description: 分頁偏移量
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: 成功取得論文列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisListResponse'
+    
+    post:
+      tags: [論文管理]
+      summary: 新增論文
+      description: 新增一筆論文資料
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThesisCreateRequest'
+      responses:
+        '201':
+          description: 成功新增論文
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisResponse'
+
+  /theses/{id}:
+    get:
+      tags: [論文管理]
+      summary: 取得單篇論文詳細內容
+      description: 依論文 id 取得詳細內容
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 論文唯一識別碼
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '200':
+          description: 成功取得論文內容
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisResponse'
+    
+    put:
+      tags: [論文管理]
+      summary: 更新論文資料
+      description: 更新指定論文的完整資料
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 論文唯一識別碼
+          schema:
+            type: string
+            example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThesisUpdateRequest'
+      responses:
+        '200':
+          description: 成功更新論文
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisResponse'
+    
+    patch:
+      tags: [論文管理]
+      summary: 部分更新論文資料
+      description: 部分更新指定論文的資料
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 論文唯一識別碼
+          schema:
+            type: string
+            example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThesisPatchRequest'
+      responses:
+        '200':
+          description: 成功部分更新論文
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisResponse'
+    
+    delete:
+      tags: [論文管理]
+      summary: 刪除論文
+      description: 刪除指定的論文資料
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 論文唯一識別碼
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '200':
+          description: 成功刪除論文
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "論文已成功刪除"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # 論文相關 Schema
+    ThesisDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        title:
+          type: string
+          example: "台灣博碩士論文網發展現況與展望"
+        author:
+          type: string
+          example: "王小明"
+        school:
+          type: string
+          example: "國立臺灣大學"
+        department:
+          type: string
+          example: "資訊工程學系"
+        degree:
+          type: string
+          example: "碩士"
+        year:
+          type: integer
+          example: 113
+        abstract:
+          type: string
+          example: "本論文探討台灣博碩士論文網的發展現況..."
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["論文網", "台灣", "Open Access"]
+        advisor:
+          type: string
+          example: "李教授"
+        fullTextAvailable:
+          type: boolean
+          example: true
+        downloadUrl:
+          type: string
+          example: "https://ndltd.ncl.edu.tw/download/1"
+        viewCount:
+          type: integer
+          example: 1250
+        downloadCount:
+          type: integer
+          example: 89
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-20T15:45:00Z"
+
+    ThesisCreateRequest:
+      type: object
+      required: [title, author, school, degree, year]
+      properties:
+        title:
+          type: string
+          example: "台灣博碩士論文網發展現況與展望"
+        author:
+          type: string
+          example: "王小明"
+        school:
+          type: string
+          example: "國立臺灣大學"
+        department:
+          type: string
+          example: "資訊工程學系"
+        degree:
+          type: string
+          example: "碩士"
+        year:
+          type: integer
+          example: 113
+        abstract:
+          type: string
+          example: "本論文探討台灣博碩士論文網的發展現況..."
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["論文網", "台灣", "Open Access"]
+        advisor:
+          type: string
+          example: "李教授"
+        fullTextAvailable:
+          type: boolean
+          example: true
+        downloadUrl:
+          type: string
+          example: "https://ndltd.ncl.edu.tw/download/1"
+
+    ThesisUpdateRequest:
+      type: object
+      required: [title, author, school, degree, year]
+      properties:
+        title:
+          type: string
+          example: "台灣博碩士論文網發展現況與展望"
+        author:
+          type: string
+          example: "王小明"
+        school:
+          type: string
+          example: "國立臺灣大學"
+        department:
+          type: string
+          example: "資訊工程學系"
+        degree:
+          type: string
+          example: "碩士"
+        year:
+          type: integer
+          example: 113
+        abstract:
+          type: string
+          example: "本論文探討台灣博碩士論文網的發展現況..."
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["論文網", "台灣", "Open Access"]
+        advisor:
+          type: string
+          example: "李教授"
+        fullTextAvailable:
+          type: boolean
+          example: true
+        downloadUrl:
+          type: string
+          example: "https://ndltd.ncl.edu.tw/download/1"
+
+    ThesisPatchRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "台灣博碩士論文網發展現況與展望"
+        author:
+          type: string
+          example: "王小明"
+        school:
+          type: string
+          example: "國立臺灣大學"
+        department:
+          type: string
+          example: "資訊工程學系"
+        degree:
+          type: string
+          example: "碩士"
+        year:
+          type: integer
+          example: 113
+        abstract:
+          type: string
+          example: "本論文探討台灣博碩士論文網的發展現況..."
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["論文網", "台灣", "Open Access"]
+        advisor:
+          type: string
+          example: "李教授"
+        fullTextAvailable:
+          type: boolean
+          example: true
+        downloadUrl:
+          type: string
+          example: "https://ndltd.ncl.edu.tw/download/1"
+
+    ThesisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/ThesisDetail'
+
+    ThesisListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThesisDetail'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PaginationInfo:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: 總筆數
+          example: 1250
+        count:
+          type: integer
+          description: 當前頁筆數
+          example: 10
+        per_page:
+          type: integer
+          description: 每頁筆數
+          example: 10
+        current_page:
+          type: integer
+          description: 當前頁數
+          example: 1
+        total_pages:
+          type: integer
+          description: 總頁數
+          example: 125

@@ -17,13 +17,14 @@
       window.onload = () => {
         SwaggerUIBundle({
           urls: [
+            { url: "readme.yaml", name: "選擇系統" },
             { url: "ndltd/reader.yaml", name: "博碩士論文系統 讀者端" },
-            { url: "stage2/me.yaml", name: "博碩士論文系統 國圖端" },
-            { url: "stage2/me.yaml", name: "博碩士論文系統 對外API介接服務" },
-            { url: "stage2/me.yaml", name: "大學論文系統 入口頁" },
-            { url: "stage2/me.yaml", name: "大學論文系統 學校端" },
-            { url: "stage2/me.yaml", name: "大學論文系統 學生端" },
-            { url: "stage2/me.yaml", name: "大學論文系統 檢索端" },
+            { url: "ndltd/admin.yaml", name: "博碩士論文系統 國圖端" },
+            { url: "ndltd/api.yaml", name: "博碩士論文系統 對外API介接服務" },
+            { url: "ndltdsch/portal.yaml", name: "大學論文系統 入口頁" },
+            { url: "ndltdsch/school.yaml", name: "大學論文系統 學校端" },
+            { url: "ndltdsch/student.yaml", name: "大學論文系統 學生端" },
+            { url: "ndltdsch/reader.yaml", name: "大學論文系統 檢索端" },
           ],
           dom_id: "#swagger-ui",
           presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
