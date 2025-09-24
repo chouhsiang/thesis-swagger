@@ -375,7 +375,7 @@ paths:
   /savedtheses:
     get:
       tags: [收藏管理]
-      summary: 我的收藏
+      summary: 我的書車
       description: 取得使用者收藏的論文列表
       security:
         - bearerAuth: []
@@ -396,7 +396,7 @@ paths:
             default: 10
       responses:
         '200':
-          description: 成功取得我的收藏
+          description: 成功取得我的書車
           content:
             application/json:
               schema:
@@ -404,7 +404,7 @@ paths:
     post:
       tags: [收藏管理]
       summary: 新增一筆收藏
-      description: 新增一篇論文到我的收藏
+      description: 新增一篇論文到我的書車
       security:
         - bearerAuth: []
       requestBody:
