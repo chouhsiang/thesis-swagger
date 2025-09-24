@@ -1,0 +1,1307 @@
+openapi: 3.0.3
+info:
+  title: 博碩士論文系統 讀者端
+  description: 
+  version: 1.0.0
+  contact:
+    name: Github 原始碼
+    url: https://github.com/chouhsiang/thesis-swagger
+servers:
+  - url: https://ndltd.ncl.edu.tw/api/v1
+    description: 正式環境
+
+
+paths:
+  # 認證相關 API
+  /auth/login:
+    post:
+      tags: [認證]
+      summary: 使用者登入
+      description: 使用帳號密碼登入系統，取得授權令牌
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: 使用者帳號
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  description: 使用者密碼
+                  example: "yourpassword123"
+      responses:
+        '200':
+          description: 登入成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: JWT 授權令牌
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      expires_in:
+                        type: integer
+                        description: 令牌過期時間（秒）
+                        example: 86400
+                      user:
+                        $ref: '#/components/schemas/UserProfile'
+
+  /auth/logout:
+    post:
+      tags: [認證]
+      summary: 使用者登出
+      description: 登出系統，使當前令牌失效
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Successfully logged out"
+
+  /auth/me:
+    get:
+      tags: [認證]
+      summary: 取得個人資訊
+      description: 顯示目前登入使用者的基本資料
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功取得個人資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+
+
+  # 公告管理 API
+  /announcements:
+    get:
+      tags: [公告]
+      summary: 取得公告列表
+      description: 取得公告列表，顯示短內容 summary
+      parameters:
+        - name: page
+          in: query
+          description: 分頁頁碼（預設為 1）
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數（預設為 10）
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: type
+          in: query
+          description: 公告分類（系統公告、最新消息）
+          required: false
+          schema:
+            type: string
+            enum: [系統公告, 最新消息]
+        - name: tag
+          in: query
+          description: 公告標籤（重要、新功能），可多選（以逗號分隔）
+          required: false
+          schema:
+            type: string
+            example: "重要,新功能"
+      responses:
+        '200':
+          description: 成功取得公告列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnnouncementListResponse'
+
+  /announcements/{id}:
+    get:
+      tags: [公告]
+      summary: 取得公告詳細內容
+      description: 依公告 id 取得完整公告內容
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 公告唯一識別碼
+          schema:
+            type: string
+            example: "20240115"
+      responses:
+        '200':
+          description: 成功取得公告詳細內容
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnnouncementDetailResponse'
+
+  # 論文管理 API
+  /theses/{id}:
+    get:
+      tags: [論文]
+      summary: 取得單篇論文詳細內容
+      description: 依論文 id 取得詳細內容
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 論文唯一識別碼
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '200':
+          description: 成功取得論文內容
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    $ref: '#/components/schemas/ThesisDetail'
+
+  /theses/search:
+    get:
+      tags: [論文]
+      summary: 搜尋論文
+      description: 依多種條件（含進階檢索）搜尋論文，回傳論文列表
+      parameters:
+        - name: keyword
+          in: query
+          description: 關鍵字（標題、摘要、關鍵字等模糊搜尋）
+          schema:
+            type: string
+            example: "Open Access"
+        - name: school
+          in: query
+          description: 學校名稱
+          schema:
+            type: string
+            example: "國立臺灣大學"
+        - name: author
+          in: query
+          description: 作者
+          schema:
+            type: string
+            example: "王小明"
+        - name: degree
+          in: query
+          description: 學位（碩士/博士/其他）
+          schema:
+            type: string
+            enum: [碩士, 博士, 其他]
+        - name: year
+          in: query
+          description: 年度
+          schema:
+            type: integer
+            example: 113
+        - name: fullTextAvailable
+          in: query
+          description: 是否有全文
+          schema:
+            type: boolean
+            example: true
+        - name: sort
+          in: query
+          description: 排序方式
+          schema:
+            type: string
+            enum: [viewCount, downloadCount, year, relevance]
+            default: relevance
+        - name: limit
+          in: query
+          description: 限制回傳最大筆數（預設 10，最大 100）
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+      responses:
+        '200':
+          description: 成功取得搜尋結果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisSearchResponse'
+
+  # 主題策展 API
+  /exhibitions:
+    get:
+      tags: [主題策展]
+      summary: 取得主題策展列表
+      description: 取得所有主題策展的列表，包含主題名稱、圖示和說明
+      parameters:
+        - name: page
+          in: query
+          description: 分頁頁碼（預設為 1）
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數（預設為 10）
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: category
+          in: query
+          description: 策展分類篩選
+          required: false
+          schema:
+            type: string
+            enum: [熱門主題, 學科領域, 時事議題, 特色研究]
+        - name: featured
+          in: query
+          description: 是否只顯示精選策展
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 成功取得主題策展列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionListResponse'
+
+  /exhibitions/{id}:
+    get:
+      tags: [主題策展]
+      summary: 取得主題策展詳細內容
+      description: 依策展 ID 取得詳細內容，包含該主題下的所有論文
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 主題策展唯一識別碼
+          schema:
+            type: string
+            example: "EXH-AI-EDU-2024"
+        - name: page
+          in: query
+          description: 論文列表分頁頁碼（預設為 1）
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁論文筆數（預設為 20）
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          description: 論文排序方式
+          required: false
+          schema:
+            type: string
+            enum: [viewCount, downloadCount, year, relevance, featured]
+            default: featured
+      responses:
+        '200':
+          description: 成功取得主題策展詳細內容
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionDetailResponse'
+
+  # 檢索歷史 API
+  /search-history:
+    get:
+      tags: [檢索歷史]
+      summary: 取得檢索歷史
+      description: 取得使用者的搜尋歷史記錄，按時間倒序排列
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 分頁頁碼（預設為 1）
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數（預設為 20，最大 100）
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: 成功取得檢索歷史
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchHistoryResponse'
+    post:
+      tags: [檢索歷史]
+      summary: 新增檢索記錄
+      description: 記錄使用者的搜尋指令（通常在執行搜尋時自動呼叫）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                  description: 搜尋關鍵字
+                  example: "Open Access"
+                filters:
+                  type: object
+                  description: 搜尋篩選條件
+                  properties:
+                    school:
+                      type: string
+                      example: "國立臺灣大學"
+                    year:
+                      type: integer
+                      example: 113
+                    degree:
+                      type: string
+                      example: "碩士"
+                results_count:
+                  type: integer
+                  description: 搜尋結果數量
+                  example: 25
+      responses:
+        '201':
+          description: 成功記錄檢索歷史
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    delete:
+      tags: [檢索歷史]
+      summary: 清空檢索歷史
+      description: 清空使用者的所有搜尋歷史記錄
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功清空檢索歷史
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /search-history/{id}:
+    delete:
+      tags: [檢索歷史]
+      summary: 刪除單筆檢索記錄
+      description: 刪除指定的搜尋歷史記錄
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 檢索記錄唯一識別碼
+      responses:
+        '200':
+          description: 成功刪除檢索記錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # 收藏管理 API
+  /savedtheses:
+    get:
+      tags: [收藏管理]
+      summary: 我的收藏
+      description: 取得使用者收藏的論文列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 分頁頁碼（預設為 1）
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數（預設為 10）
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 成功取得我的收藏
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedThesesResponse'
+    post:
+      tags: [收藏管理]
+      summary: 新增一筆收藏
+      description: 新增一篇論文到我的收藏
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: string
+                  description: 論文唯一識別碼
+                  example: "1"
+      responses:
+        '200':
+          description: 成功新增收藏
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /savedtheses/{id}:
+    delete:
+      tags: [收藏管理]
+      summary: 刪除一筆收藏
+      description: 刪除一篇已收藏的論文
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 論文唯一識別碼
+      responses:
+        '200':
+          description: 成功刪除收藏
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # 排行榜 API
+  /ranking/schools:
+    get:
+      tags: [排行榜]
+      summary: 取得學校熱門排行榜
+      description: 取得各校熱門論文排行榜，支援排行類型、年度與筆數限制
+      parameters:
+        - name: type
+          in: query
+          description: 排行類型
+          required: true
+          schema:
+            type: string
+            enum: [total, reference, view, download]
+        - name: year
+          in: query
+          description: 年度（如 113、112、111）
+          schema:
+            type: integer
+            example: 113
+        - name: limit
+          in: query
+          description: 限制回傳最大筆數（預設 10，最大 100）
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+      responses:
+        '200':
+          description: 成功取得排行榜
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankingResponse'
+
+  # 統計資訊 API
+  /statistics:
+    get:
+      tags: [統計資訊]
+      summary: 取得論文統計資訊
+      description: 取得全站論文總數、參與學校數、開放取用論文數、累計下載數、授權率等統計資料
+      responses:
+        '200':
+          description: 成功取得統計資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+
+
+components:
+  schemas:
+    # 公告相關 Schema
+    AnnouncementListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Announcement'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    AnnouncementDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/AnnouncementDetail'
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "2024011501"
+        title:
+          type: string
+          example: "系統維護公告"
+        type:
+          type: string
+          example: "系統公告"
+        summary:
+          type: string
+          example: "系統維護通知"
+        date:
+          type: string
+          format: date
+          example: "2024-01-15"
+
+    AnnouncementDetail:
+      allOf:
+        - $ref: '#/components/schemas/Announcement'
+        - type: object
+          properties:
+            content:
+              type: string
+              description: 完整公告內容
+
+    # 論文相關 Schema
+    ThesisDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        title:
+          type: string
+          example: "台灣博碩士論文網發展現況與展望"
+        author:
+          type: string
+          example: "王小明"
+        school:
+          type: string
+          example: "國立臺灣大學"
+        degree:
+          type: string
+          example: "碩士"
+        year:
+          type: integer
+          example: 113
+        abstract:
+          type: string
+          example: "本論文探討台灣博碩士論文網的發展現況..."
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["論文網", "台灣", "Open Access"]
+
+    ThesisSearchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThesisDetail'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    # 主題策展相關 Schema
+    ExhibitionListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exhibition'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    ExhibitionDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/ExhibitionDetail'
+
+    Exhibition:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 主題策展唯一識別碼
+          example: "EXH-AI-EDU-2024"
+        title:
+          type: string
+          description: 策展主題名稱
+          example: "人工智慧在教育領域的應用"
+        description:
+          type: string
+          description: 策展主題說明
+          example: "探討人工智慧技術如何革新教育模式，包含機器學習、自然語言處理等技術在個人化學習、智能輔導等方面的應用研究"
+        icon:
+          type: string
+          description: 主題圖示 URL 或圖示代碼
+          example: "🤖"
+        category:
+          type: string
+          description: 策展分類
+          enum: [熱門主題, 學科領域, 時事議題, 特色研究]
+          example: "熱門主題"
+        thesis_count:
+          type: integer
+          description: 該主題包含的論文數量
+          example: 156
+        view_count:
+          type: integer
+          description: 策展瀏覽次數
+          example: 2580
+        featured:
+          type: boolean
+          description: 是否為精選策展
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: 策展建立時間
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: 策展最後更新時間
+          example: "2024-03-20T14:45:00Z"
+        tags:
+          type: array
+          items:
+            type: string
+          description: 策展標籤
+          example: ["AI", "教育科技", "機器學習", "個人化學習"]
+
+    ExhibitionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Exhibition'
+        - type: object
+          properties:
+            curator_info:
+              type: object
+              description: 策展人資訊
+              properties:
+                name:
+                  type: string
+                  example: "國立臺灣大學資訊工程學系"
+                description:
+                  type: string
+                  example: "由資工系教授群共同策展，精選AI教育應用相關優質論文"
+            theses:
+              type: array
+              items:
+                $ref: '#/components/schemas/ThesisDetail'
+              description: 策展包含的論文列表
+            theses_info:
+              $ref: '#/components/schemas/PaginationInfo'
+
+    # LLM 語義檢索相關 Schema
+    LLMResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: object
+          properties:
+            answer:
+              type: string
+              description: LLM 生成的智能回應
+              example: "根據您的需求，我為您找到了幾篇關於人工智慧在教育領域應用的優質論文。這些研究主要聚焦在機器學習技術如何改善教學效果、個人化學習系統的設計，以及AI輔助教學工具的開發。以下是相關的論文推薦："
+            query_analysis:
+              type: object
+              description: 查詢分析結果
+              properties:
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                  description: 提取的關鍵字
+                  example: ["人工智慧", "教育", "機器學習", "教學應用"]
+                intent:
+                  type: string
+                  description: 查詢意圖
+                  example: "尋找AI在教育領域的應用研究"
+                suggested_filters:
+                  type: object
+                  description: 建議的搜尋篩選條件
+                  properties:
+                    keywords:
+                      type: array
+                      items:
+                        type: string
+                      example: ["artificial intelligence", "education", "machine learning"]
+                    subjects:
+                      type: array
+                      items:
+                        type: string
+                      example: ["教育學", "資訊工程"]
+            recommended_theses:
+              type: array
+              items:
+                $ref: '#/components/schemas/RecommendedThesis'
+              description: 推薦的相關論文
+            processing_time:
+              type: number
+              format: float
+              description: 處理時間（秒）
+              example: 1.25
+
+    RecommendedThesis:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "thesis_001"
+        title:
+          type: string
+          example: "機器學習在個人化教育系統中的應用研究"
+        author:
+          type: string
+          example: "張小明"
+        school:
+          type: string
+          example: "國立臺灣大學"
+        year:
+          type: integer
+          example: 113
+        relevance_score:
+          type: number
+          format: float
+          description: 相關性評分（0-1）
+          example: 0.92
+        summary:
+          type: string
+          description: 論文摘要（可選）
+          example: "本研究探討機器學習技術在個人化教育系統中的應用，提出了一套基於學習者行為分析的智能推薦算法..."
+        match_reasons:
+          type: array
+          items:
+            type: string
+          description: 匹配原因
+          example: ["關鍵字匹配: 機器學習", "主題相關: 教育技術", "研究方法相似"]
+
+    # 檢索歷史相關 Schema
+    SearchHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchHistoryItem'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    SearchHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 檢索記錄唯一識別碼
+          example: "search_123456"
+        query:
+          type: string
+          description: 搜尋關鍵字
+          example: "Open Access"
+        filters:
+          type: object
+          description: 搜尋篩選條件
+          properties:
+            school:
+              type: string
+              example: "國立臺灣大學"
+            year:
+              type: integer
+              example: 113
+            degree:
+              type: string
+              example: "碩士"
+        results_count:
+          type: integer
+          description: 搜尋結果數量
+          example: 25
+        search_time:
+          type: string
+          format: date-time
+          description: 搜尋時間
+          example: "2024-01-15T10:30:00Z"
+
+    # 個人資料相關 Schema
+    UserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "王小明"
+        email:
+          type: string
+          example: "user@example.com"
+
+    SavedThesesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThesisDetail'
+
+    # 排行榜相關 Schema
+    RankingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            type: object
+            properties:
+              rank:
+                type: integer
+                example: 1
+              school:
+                type: string
+                example: "國立臺灣大學"
+              count:
+                type: integer
+                example: 12456
+
+    # 統計資訊 Schema
+    StatisticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: object
+          properties:
+            totalTheses:
+              type: integer
+              description: 論文總數
+              example: 1234567
+            totalSchools:
+              type: integer
+              description: 參與學校數
+              example: 145
+            openAccessTheses:
+              type: integer
+              description: 開放取用論文數
+              example: 890123
+            authorizationRate:
+              type: number
+              format: float
+              description: 授權率（百分比）
+              example: 72.1
+
+
+    # 通用 Schema
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: object
+          nullable: true
+
+    # 分頁資訊 Schema
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 當前頁碼
+          example: 1
+        per_page:
+          type: integer
+          description: 每頁筆數
+          example: 10
+        count:
+          type: integer
+          description: 當前頁面筆數
+          example: 10
+        total_count:
+          type: integer
+          description: 總筆數
+          example: 200
+        total_pages:
+          type: integer
+          description: 總頁數
+          example: 20
+
+  responses:
+    BadRequest:
+      description: 錯誤的請求參數
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: integer
+                      example: 1001
+                    message:
+                      type: string
+                      example: "Invalid query parameter"
+              messages:
+                type: array
+                items:
+                  type: object
+                example: []
+              result:
+                nullable: true
+
+    NotFound:
+      description: 找不到指定資源
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: integer
+                      example: 1404
+                    message:
+                      type: string
+                      example: "Resource not found"
+              messages:
+                type: array
+                items:
+                  type: object
+                example: []
+              result:
+                nullable: true
+
+    InternalServerError:
+      description: 伺服器錯誤
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: integer
+                      example: 1002
+                    message:
+                      type: string
+                      example: "Internal server error"
+              messages:
+                type: array
+                items:
+                  type: object
+                example: []
+              result:
+                nullable: true
+
+    Unauthorized:
+      description: 未授權或令牌無效
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: integer
+                      example: 1401
+                    message:
+                      type: string
+                      example: "Unauthorized access"
+              messages:
+                type: array
+                items:
+                  type: object
+                example: []
+              result:
+                nullable: true
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT 授權令牌，格式：Bearer {token}

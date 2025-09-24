@@ -396,7 +396,7 @@ paths:
                         example: 申請已送出，請等待系統審核
 
   # 靜態資源 API
-  /static/faqs:
+  /faqs:
     get:
       tags: [靜態資源]
       summary: 取得常見問答清單
@@ -436,7 +436,7 @@ paths:
                           type: string
                           example: "請點選『進入上傳系統』，依照指示完成論文上傳流程。"
 
-  /static/docs:
+  /docs:
     get:
       tags: [靜態資源]
       summary: 取得所有文件類別及其檔案清單
@@ -487,6 +487,190 @@ paths:
                                 type: string
                                 example: "https://example.com/files/101/download"
 
+  # 問題回報 API
+  /issues:
+    get:
+      tags: [問題回報]
+      summary: 取得問題回報列表
+      description: 取得使用者提交的問題回報列表
+      parameters:
+        - name: status
+          in: query
+          description: 問題狀態篩選
+          schema:
+            type: string
+            enum: [待處理, 處理中, 已解決, 已關閉]
+        - name: page
+          in: query
+          description: 分頁頁碼（預設為 1）
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數（預設為 10）
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 成功取得問題回報列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Issue'
+    
+    post:
+      tags: [問題回報]
+      summary: 提交問題回報
+      description: 學生提交新的問題回報
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  description: 問題描述內容
+                  example: "論文上傳時出現錯誤，無法完成檔案上傳"
+                category:
+                  type: string
+                  description: 問題分類
+                  enum: [系統問題, 操作問題, 其他]
+                  example: "系統問題"
+      responses:
+        '201':
+          description: 成功提交問題回報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    $ref: '#/components/schemas/Issue'
+
+  /issues/{id}:
+    get:
+      tags: [問題回報]
+      summary: 取得問題回報詳細內容
+      description: 依問題 ID 取得詳細內容
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 問題回報唯一識別碼
+          schema:
+            type: string
+            example: "ISS-20250924-001"
+      responses:
+        '200':
+          description: 成功取得問題回報詳細內容
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    $ref: '#/components/schemas/Issue'
+
+  # 待辦事項 API
+  /todo:
+    get:
+      tags: [待辦事項]
+      summary: 取得目前處理階段
+      description: 取得學生論文提交的目前處理階段和待辦事項
+      responses:
+        '200':
+          description: 成功取得處理階段資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      stage:
+                        type: integer
+                        description: 目前處理階段（1-10）
+                        example: 5
+                      stage_name:
+                        type: string
+                        description: 階段名稱
+                        example: "論文審查中"
+                      description:
+                        type: string
+                        description: 階段說明
+                        example: "您的論文正在進行審查，預計需要 3-5 個工作天"
+                      next_action:
+                        type: string
+                        description: 下一步動作
+                        example: "等待審查結果，如有問題會另行通知"
+                      progress_percentage:
+                        type: integer
+                        description: 完成進度百分比
+                        example: 50
+
 components:
   schemas:
     # 個人資料相關 Schema
@@ -516,6 +700,44 @@ components:
           format: date-time
           description: 論文最後提交時間 (ISO 8601 格式)
           example: "2025-08-20T14:30:00Z"
+
+    # 問題回報相關 Schema
+    Issue:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 問題回報唯一識別碼
+          example: "ISS-20250924-001"
+        content:
+          type: string
+          description: 問題描述內容
+          example: "論文上傳時出現錯誤，無法完成檔案上傳"
+        category:
+          type: string
+          description: 問題分類
+          enum: [系統問題, 操作問題, 其他]
+          example: "系統問題"
+        status:
+          type: string
+          description: 問題處理狀態
+          enum: [待處理, 處理中, 已解決, 已關閉]
+          example: "待處理"
+        created_at:
+          type: string
+          format: date-time
+          description: 問題提交時間
+          example: "2025-09-24T08:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: 問題最後更新時間
+          example: "2025-09-24T08:30:00Z"
+        response:
+          type: string
+          description: 管理員回覆內容
+          example: "已收到您的問題回報，我們會盡快處理"
+          nullable: true
 
     JSendSuccessUser:
       type: object
