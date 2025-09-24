@@ -109,3 +109,350 @@ info:
   contact:
     name: Github 原始碼
     url: https://github.com/chouhsiang/thesis-swagger
+
+servers:
+  - url: https://example.com/api/v1
+    description: 範例伺服器
+
+paths:
+  /example/success:
+    get:
+      tags: [API回應範例]
+      summary: 成功回應範例 (200)
+      description: 展示標準的成功回應格式 (Cloudflare API 標準)
+      responses:
+        '200':
+          description: 成功回應範例
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "操作成功完成"
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "12345"
+                          name:
+                            type: string
+                            example: "範例資料"
+                          created_at:
+                            type: string
+                            format: date-time
+                            example: "2024-09-24T14:30:00Z"
+
+  /example/bad-request:
+    get:
+      tags: [API回應範例]
+      summary: 參數錯誤範例 (400)
+      description: 展示參數錯誤的回應格式
+      responses:
+        '400':
+          description: 參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1001
+                        message:
+                          type: string
+                          example: "缺少必要參數 'title'"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    nullable: true
+                    example: null
+
+  /example/unauthorized:
+    get:
+      tags: [API回應範例]
+      summary: 未授權範例 (401)
+      description: 展示未授權錯誤的回應格式
+      responses:
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1401
+                        message:
+                          type: string
+                          example: "請提供有效的授權令牌"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    nullable: true
+                    example: null
+
+  /example/forbidden:
+    get:
+      tags: [API回應範例]
+      summary: 權限不足範例 (403)
+      description: 展示權限不足錯誤的回應格式
+      responses:
+        '403':
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1403
+                        message:
+                          type: string
+                          example: "使用者權限不足，無法存取該資源"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    nullable: true
+                    example: null
+
+  /example/not-found:
+    get:
+      tags: [API回應範例]
+      summary: 資源不存在範例 (404)
+      description: 展示資源不存在錯誤的回應格式
+      responses:
+        '404':
+          description: 資源不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1404
+                        message:
+                          type: string
+                          example: "找不到指定的論文資料"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    nullable: true
+                    example: null
+
+  /example/validation-error:
+    get:
+      tags: [API回應範例]
+      summary: 驗證失敗範例 (422)
+      description: 展示資料驗證失敗的回應格式
+      responses:
+        '422':
+          description: 驗證失敗
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1422
+                        message:
+                          type: string
+                          example: "資料驗證失敗"
+                        field:
+                          type: string
+                          example: "email"
+                        details:
+                          type: string
+                          example: "電子郵件格式不正確"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    nullable: true
+                    example: null
+
+  /example/server-error:
+    get:
+      tags: [API回應範例]
+      summary: 伺服器錯誤範例 (500)
+      description: 展示內部伺服器錯誤的回應格式
+      responses:
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: integer
+                          example: 1500
+                        message:
+                          type: string
+                          example: "內部伺服器錯誤，請稍後再試"
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    nullable: true
+                    example: null
+
+  /example/paginated-response:
+    get:
+      tags: [API回應範例]
+      summary: 分頁回應範例
+      description: 展示包含分頁資訊的成功回應格式
+      responses:
+        '200':
+          description: 分頁回應範例
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "1"
+                        title:
+                          type: string
+                          example: "範例論文標題"
+                        author:
+                          type: string
+                          example: "王小明"
+                    example:
+                      - id: "1"
+                        title: "人工智慧在教育領域的應用研究"
+                        author: "王小明"
+                      - id: "2"
+                        title: "機器學習於醫療診斷之研究"
+                        author: "李小華"
+                  result_info:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 10
+                      count:
+                        type: integer
+                        example: 2
+                      total_count:
+                        type: integer
+                        example: 156
+                      total_pages:
+                        type: integer
+                        example: 16
+
+components:
