@@ -402,7 +402,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SavedThesesResponse'
     post:
-      tags: [書車管理]
+      tags: [書車]
       summary: 新增一筆書車
       description: 新增一篇論文到我的書車
       security:
@@ -429,7 +429,7 @@ paths:
 
   /savedtheses/{id}:
     delete:
-      tags: [書車管理]
+      tags: [書車]
       summary: 刪除一筆書車
       description: 刪除一篇已書車的論文
       security:
