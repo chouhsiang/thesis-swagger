@@ -1,0 +1,1543 @@
+openapi: 3.0.3
+info:
+  title: 大學論文系統 學校端
+  description: 學校管理功能，整合個人資料、人員管理、論文審核、系統設定、統計報表、送存國圖等完整功能
+  version: 1.0.0
+  contact:
+    name: Github 原始碼
+    url: https://github.com/chouhsiang/thesis-swagger
+
+servers:
+  - url: https://ndltdsch.ncl.edu.tw/api/v1
+    description: 正式環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  # 認證 API
+  /auth/login/callback:
+    post:
+      tags: [認證]
+      summary: OAuth 登入回調
+      description: 處理 OAuth 認證回調，完成使用者登入流程
+      security: []  # 此端點不需要認證
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, state]
+              properties:
+                code:
+                  type: string
+                  description: OAuth 授權碼
+                  example: "abc123def456"
+                state:
+                  type: string
+                  description: 狀態參數，用於防止 CSRF 攻擊
+                  example: "random_state_string"
+                redirect_uri:
+                  type: string
+                  description: 重定向 URI
+                  example: "https://ndltdsch.ncl.edu.tw/auth/callback"
+      responses:
+        '200':
+          description: 登入成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                        description: JWT 存取權杖
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      refresh_token:
+                        type: string
+                        description: 刷新權杖
+                        example: "refresh_token_string"
+                      expires_in:
+                        type: integer
+                        description: 權杖有效期（秒）
+                        example: 3600
+                      token_type:
+                        type: string
+                        description: 權杖類型
+                        example: "Bearer"
+                      user:
+                        $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: 登入失敗 - 無效的授權碼或參數
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: [{"code": "invalid_grant", "message": "無效的授權碼"}]
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    example: null
+        '401':
+          description: 認證失敗 - 使用者未授權
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: [{"code": "unauthorized", "message": "使用者未授權或權限不足"}]
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    example: null
+
+  /auth/logout:
+    post:
+      tags: [認證]
+      summary: 使用者登出
+      description: 登出目前使用者，使 JWT 權杖失效
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: [{"message": "已成功登出"}]
+                  result:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "登出成功"
+                      logged_out_at:
+                        type: string
+                        format: date-time
+                        example: "2024-09-24T16:36:00Z"
+        '401':
+          description: 未認證 - 無效的權杖
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: [{"code": "invalid_token", "message": "無效的權杖"}]
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    example: null
+
+  # 個人資料 API (來自 me.yaml)
+  /auth/me:
+    get:
+      tags: [個人資料]
+      summary: 取得個人資訊
+      description: 顯示目前登入使用者的基本資料
+      responses:
+        '200':
+          description: 成功取得個人資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    $ref: '#/components/schemas/UserProfile'
+
+  /me/savedtheses:
+    get:
+      tags: [個人資料]
+      summary: 我的收藏
+      description: 取得使用者收藏的論文列表
+      responses:
+        '200':
+          description: 成功取得我的收藏
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SavedThesis'
+    
+    post:
+      tags: [個人資料]
+      summary: 新增一筆收藏
+      description: 新增一篇論文到我的收藏
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: string
+                  description: 論文唯一識別碼
+                  example: "1"
+      responses:
+        '200':
+          description: 成功新增收藏
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /me/savedtheses/{id}:
+    delete:
+      tags: [個人資料]
+      summary: 刪除一筆收藏
+      description: 刪除一篇已收藏的論文
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 論文唯一識別碼
+      responses:
+        '200':
+          description: 成功刪除收藏
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # 人員管理 API (來自 users.yaml)
+  /users:
+    get:
+      tags: [人員管理]
+      summary: 取得使用者清單
+      description: 查詢所有使用者及其角色、權限設定
+      parameters:
+        - name: role
+          in: query
+          description: 角色篩選
+          schema:
+            type: string
+            enum: [管理員, 審查人員, 工讀生, 系所人員, 其他]
+        - name: department
+          in: query
+          description: 系所篩選
+          schema:
+            type: string
+            example: "資訊工程學系"
+        - name: page
+          in: query
+          description: 分頁頁碼
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 成功取得使用者清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+    
+    post:
+      tags: [人員管理]
+      summary: 新增人員
+      description: 新增一位新使用者並設定角色與權限
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: 成功新增人員
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /users/{userId}:
+    get:
+      tags: [人員管理]
+      summary: 取得使用者資訊
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "user001"
+      responses:
+        '200':
+          description: 成功取得使用者資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+    
+    put:
+      tags: [人員管理]
+      summary: 編輯使用者權限
+      description: 更新使用者角色與權限
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "user001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: 成功更新使用者資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+    
+    delete:
+      tags: [人員管理]
+      summary: 刪除使用者
+      description: 移除使用者帳號
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "user001"
+      responses:
+        '200':
+          description: 成功刪除使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /permissions:
+    get:
+      tags: [人員管理]
+      summary: 取得可用權限清單
+      description: 回傳系統中所有可分配的權限項目，供前端動態載入
+      responses:
+        '200':
+          description: 成功取得權限清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionListResponse'
+
+  # 系統設定 API (來自 settings.yaml)
+  /thesissettings:
+    get:
+      tags: [系統設定]
+      summary: 取得學校論文設定
+      description: 取得學校的論文上傳與授權設定
+      responses:
+        '200':
+          description: 成功取得設定
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisSettingResponse'
+    
+    post:
+      tags: [系統設定]
+      summary: 建立或更新學校論文設定
+      description: 若該學校已存在設定，會覆蓋舊設定
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThesisSetting'
+      responses:
+        '201':
+          description: 設定成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # 論文管理 API (來自 thesis.yaml)
+  /theses:
+    get:
+      tags: [論文管理]
+      summary: 查詢論文清單
+      description: 查詢全校論文清單，支援多種篩選條件
+      parameters:
+        - name: department
+          in: query
+          description: 系所篩選
+          schema:
+            type: string
+            example: "資訊工程學系"
+        - name: startDate
+          in: query
+          description: 開始日期
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+        - name: endDate
+          in: query
+          description: 結束日期
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+        - name: status
+          in: query
+          description: 論文狀態
+          schema:
+            type: string
+            enum: [公開, 限制, 隱藏]
+            example: "公開"
+        - name: page
+          in: query
+          description: 分頁頁碼
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 成功取得論文清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThesisListResponse'
+
+  /theses/{thesisId}/replace:
+    post:
+      tags: [論文管理]
+      summary: 抽換論文
+      description: 對單篇論文進行抽換，需確認相關條件
+      parameters:
+        - name: thesisId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "thesis123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm]
+              properties:
+                confirm:
+                  type: boolean
+                  description: 確認抽換
+                  example: true
+                reason:
+                  type: string
+                  description: 抽換原因
+                  example: "作者要求更正內容"
+      responses:
+        '200':
+          description: 抽換成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # 論文審核 API (來自 reviews.yaml)
+  /reviews:
+    get:
+      tags: [論文審核]
+      summary: 查詢審核論文清單
+      description: 取得待審核或已審核的論文列表
+      parameters:
+        - name: keyword
+          in: query
+          description: 關鍵字搜尋
+          schema:
+            type: string
+            example: "深度學習"
+        - name: status
+          in: query
+          description: 審核狀態篩選
+          schema:
+            type: string
+            enum: [待審核, 審核中, 已通過, 已退件]
+            example: "待審核"
+        - name: department
+          in: query
+          description: 系所篩選
+          schema:
+            type: string
+            example: "資訊工程學系"
+        - name: startDate
+          in: query
+          description: 開始日期
+          schema:
+            type: string
+            format: date
+            example: "2024-07-01"
+        - name: endDate
+          in: query
+          description: 結束日期
+          schema:
+            type: string
+            format: date
+            example: "2024-07-31"
+        - name: page
+          in: query
+          description: 分頁頁碼
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 成功取得審核論文清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+
+  /reviews/{thesisId}:
+    get:
+      tags: [論文審核]
+      summary: 取得單篇論文詳細資訊
+      description: 取得論文的詳細審核資訊
+      parameters:
+        - name: thesisId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "thesis123"
+      responses:
+        '200':
+          description: 成功取得論文詳細資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewDetailResponse'
+
+  /reviews/{thesisId}/decision:
+    post:
+      tags: [論文審核]
+      summary: 論文審核決定
+      description: 審核人員對單篇論文做出「通過 / 退件」決定
+      parameters:
+        - name: thesisId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "thesis123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [approved, rejected]
+                  example: "approved"
+                reason:
+                  type: string
+                  description: 審核意見或退件原因
+                  example: "格式正確，內容符合要求"
+      responses:
+        '200':
+          description: 審核決定成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # 統計報表 API (來自 reports.yaml)
+  /reports:
+    post:
+      tags: [統計報表]
+      summary: 產生論文統計報表
+      description: 傳入篩選條件，系統回傳預覽資料
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type:
+                  type: string
+                  description: 報表類型
+                  enum: [授權率, 法遵率, 工作項目, 指導教授, 論文報表查詢, 機構典藏]
+                  example: "工作項目"
+                year:
+                  type: string
+                  description: 年度
+                  example: "2024"
+                month:
+                  type: string
+                  description: 月份
+                  example: "07"
+                department:
+                  type: string
+                  description: 系所
+                  example: "資訊工程學系"
+                advisor:
+                  type: string
+                  description: 指導教授
+                  example: "李教授"
+                range:
+                  type: object
+                  description: 日期範圍
+                  properties:
+                    startDate:
+                      type: string
+                      format: date
+                      example: "2024-07-01"
+                    endDate:
+                      type: string
+                      format: date
+                      example: "2024-07-31"
+      responses:
+        '200':
+          description: 成功產生報表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+
+  /reports/export:
+    post:
+      tags: [統計報表]
+      summary: 匯出統計報表
+      description: 將篩選條件對應的報表匯出成檔案
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type:
+                  type: string
+                  enum: [授權率, 法遵率, 工作項目, 指導教授, 論文報表查詢, 機構典藏]
+                  example: "工作項目"
+                year:
+                  type: string
+                  example: "2024"
+                month:
+                  type: string
+                  example: "07"
+                department:
+                  type: string
+                  example: "資訊工程學系"
+      responses:
+        '200':
+          description: 匯出成功
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  # 送存國圖 API (來自 submissions.yaml)
+  /submissions:
+    get:
+      tags: [送存國圖]
+      summary: 取得送存清單
+      description: 取得可送存到國家圖書館的論文清單
+      responses:
+        '200':
+          description: 成功取得送存清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionListResponse'
+    
+    post:
+      tags: [送存國圖]
+      summary: 執行送存
+      description: 批次送存多篇論文到國家圖書館
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [thesisIds]
+              properties:
+                thesisIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 論文ID列表
+                  example: ["thesis123", "thesis124", "thesis125"]
+      responses:
+        '201':
+          description: 送存成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /submissions/history:
+    get:
+      tags: [送存國圖]
+      summary: 查詢送存紀錄
+      description: 查詢歷史送存紀錄
+      responses:
+        '200':
+          description: 成功取得送存紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionHistoryResponse'
+
+  /submissions/history/{historyId}/download:
+    get:
+      tags: [送存國圖]
+      summary: 下載送存檔案
+      description: 下載指定送存紀錄的檔案
+      parameters:
+        - name: historyId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sub20250812-001"
+      responses:
+        '200':
+          description: 下載成功
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # 個人資料相關 Schema
+    UserProfile:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 使用者姓名
+          example: "王小明"
+        email:
+          type: string
+          description: 使用者電子郵件
+          example: "user@example.com"
+
+    SavedThesis:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 論文唯一識別碼
+          example: "1"
+        title:
+          type: string
+          description: 論文標題
+          example: "台灣博碩士論文網發展現況與展望"
+        author:
+          type: string
+          description: 作者
+          example: "王小明"
+        school:
+          type: string
+          description: 學校
+          example: "國立臺灣大學"
+        degree:
+          type: string
+          description: 學位
+          example: "碩士"
+        type:
+          type: string
+          description: 論文類型
+          example: "學術"
+        college:
+          type: string
+          description: 學院
+          example: "工學院"
+        department:
+          type: string
+          description: 系所
+          example: "資訊工程學系"
+        advisor:
+          type: string
+          description: 指導教授
+          example: "陳大明"
+        language:
+          type: string
+          description: 論文語言
+          example: "中文"
+        year:
+          type: integer
+          description: 年度
+          example: 113
+        abstract:
+          type: string
+          description: 摘要
+          example: "本論文探討台灣博碩士論文網的發展現況與未來展望..."
+        keywords:
+          type: array
+          description: 關鍵字
+          items:
+            type: string
+          example: ["論文網", "台灣", "Open Access"]
+        fullTextAvailable:
+          type: boolean
+          description: 是否有全文
+          example: true
+        viewCount:
+          type: integer
+          description: 被點閱數
+          example: 1200
+        downloadCount:
+          type: integer
+          description: 下載數
+          example: 800
+        referenceCount:
+          type: integer
+          description: 被引用數
+          example: 25
+
+    # 人員管理相關 Schema
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "u123456"
+        name:
+          type: string
+          example: "王頌華"
+        email:
+          type: string
+          example: "abc1221@gmail.com"
+        role:
+          type: string
+          enum: [管理員, 審查人員, 工讀生, 系所人員, 其他]
+          example: "管理員"
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    UserCreate:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+          example: "陳小明"
+        email:
+          type: string
+          example: "test@example.com"
+        role:
+          type: string
+          enum: [管理員, 審查人員, 工讀生, 系所人員, 其他]
+          example: "審查人員"
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    UserUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [管理員, 審查人員, 工讀生, 系所人員, 其他]
+          example: "工讀生"
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    Permission:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 權限名稱
+          example: "研究生論文審查"
+        level:
+          type: string
+          description: 權限層級
+          enum: [viewer, editor]
+          example: "editor"
+
+    PermissionOption:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 權限名稱
+          example: "人員帳號管理"
+        description:
+          type: string
+          description: 權限說明
+          example: "管理與編輯使用者帳號資訊"
+
+    # 系統設定相關 Schema
+    ThesisSetting:
+      type: object
+      properties:
+        reviewFlow:
+          type: string
+          enum: [library_only, department_then_library]
+          example: "library_only"
+        formatLimit:
+          type: object
+          properties:
+            allowedTypes:
+              type: array
+              items:
+                type: string
+              example: ["pdf", "docx", "txt"]
+            maxFileSizeMB:
+              type: integer
+              example: 100
+        faqs:
+          type: array
+          items:
+            type: object
+            properties:
+              question:
+                type: string
+                example: "上傳後能修改嗎？"
+              answer:
+                type: string
+                example: "期限內可刪除舊檔重新上傳。"
+        relatedDocs:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                example: "建檔流程"
+              fileName:
+                type: string
+                example: "workflow_v1.pdf"
+        watermark:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [text, image]
+              example: "text"
+            text:
+              type: string
+              example: "僅供審查使用"
+            fontSize:
+              type: integer
+              example: 14
+            opacity:
+              type: integer
+              example: 56
+            position:
+              type: string
+              example: "center"
+            imageUrl:
+              type: string
+              example: "https://files.ndl.example.com/wm/logo.png"
+        advancedFields:
+          type: array
+          example: ["keywords", "abstract", "language", "reference"]
+        supplemental:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              example: true
+            allowedTypes:
+              type: array
+              items:
+                type: string
+              example: ["pdf", "txt"]
+            maxFileSizeMB:
+              type: integer
+              example: 30
+        thesisReplacement:
+          type: object
+          properties:
+            requiredDocs:
+              type: boolean
+              example: true
+            requiredReason:
+              type: boolean
+              example: true
+            descriptions:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: "提供相關的證明文件"
+                  content:
+                    type: string
+                    example: "請上傳相關證明檔案，以利審核。"
+        thirdPartyAuthorization:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              example: false
+        onlineAgreement:
+          type: object
+          properties:
+            copyrightStatement:
+              type: string
+              example: "本人確認論文授權..."
+            extraDeclaration:
+              type: string
+              example: "其他授權說明..."
+        schoolEThesis:
+          type: object
+          properties:
+            options:
+              type: array
+              items:
+                type: string
+              example: ["internet_immediate", "campus_immediate"]
+        nclEThesis:
+          type: object
+          properties:
+            options:
+              type: array
+              items:
+                type: string
+              example: ["immediate"]
+        publicScope:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              example: true
+            items:
+              type: array
+              items:
+                type: string
+              example: ["fulltext", "bibliographic", "toc"]
+
+    # 論文相關 Schema
+    Thesis:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "thesis123"
+        department:
+          type: string
+          example: "資訊工程學系"
+        studentName:
+          type: string
+          example: "陳小明"
+        studentId:
+          type: string
+          example: "M110123456"
+        title:
+          type: string
+          example: "基於深度學習的自然語言處理研究"
+        status:
+          type: string
+          example: "公開"
+        publishDate:
+          type: string
+          format: date
+          example: "2024-04-22"
+
+    # 審核相關 Schema
+    ReviewItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "thesis123"
+        department:
+          type: string
+          example: "資訊工程學系"
+        studentName:
+          type: string
+          example: "陳小明"
+        studentId:
+          type: string
+          example: "M110123456"
+        title:
+          type: string
+          example: "基於深度學習的自然語言處理研究"
+        status:
+          type: string
+          example: "待審核"
+        submittedAt:
+          type: string
+          format: date-time
+          example: "2024-07-28T14:32:00Z"
+
+    # 報表相關 Schema
+    ReportRow:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1754380739"
+        year:
+          type: string
+          example: "113"
+        department:
+          type: string
+          example: "資訊工程學系"
+        title:
+          type: string
+          example: "基於深度學習的自然語言處理研究"
+        student:
+          type: string
+          example: "陳小明"
+        advisor:
+          type: string
+          example: "李教授"
+        status:
+          type: string
+          example: "公開"
+        reviewedAt:
+          type: string
+          format: date-time
+          example: "2025-07-15T15:59:00Z"
+
+    # 送存相關 Schema
+    SubmissionItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "thesis123"
+        department:
+          type: string
+          example: "資訊工程學系"
+        studentName:
+          type: string
+          example: "陳小明"
+        studentId:
+          type: string
+          example: "M110123456"
+        title:
+          type: string
+          example: "基於深度學習的自然語言處理研究"
+        status:
+          type: string
+          example: "立即公開"
+        schoolConfirm:
+          type: string
+          example: "授權"
+        nclConfirm:
+          type: string
+          example: "授權"
+        thirdParty:
+          type: string
+          example: "不授權"
+
+    SubmissionHistory:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "sub20250812-001"
+        submittedAt:
+          type: string
+          format: date
+          example: "2025-08-12"
+        user:
+          type: string
+          example: "王頌華"
+        role:
+          type: string
+          example: "管理員"
+        count:
+          type: integer
+          example: 100
+
+    # 回應格式 Schema
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "操作成功完成"
+
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/User'
+
+    UserListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PermissionListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionOption'
+
+    ThesisSettingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/ThesisSetting'
+
+    ThesisListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Thesis'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    ReviewListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewItem'
+        result_info:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    ReviewDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          $ref: '#/components/schemas/ReviewItem'
+
+    ReportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportRow'
+
+    SubmissionListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmissionItem'
+
+    SubmissionHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: object
+          example: []
+        messages:
+          type: array
+          items:
+            type: object
+          example: []
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmissionHistory'
+
+    # 分頁資訊 Schema
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 當前頁碼
+          example: 1
+        per_page:
+          type: integer
+          description: 每頁筆數
+          example: 20
+        count:
+          type: integer
+          description: 當前頁面筆數
+          example: 20
+        total_count:
+          type: integer
+          description: 總筆數
+          example: 156
+        total_pages:
+          type: integer
+          description: 總頁數
+          example: 8

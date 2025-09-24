@@ -367,83 +367,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SearchHistoryResponse'
-    post:
-      tags: [檢索歷史]
-      summary: 新增檢索記錄
-      description: 記錄使用者的搜尋指令（通常在執行搜尋時自動呼叫）
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [query]
-              properties:
-                query:
-                  type: string
-                  description: 搜尋關鍵字
-                  example: "Open Access"
-                filters:
-                  type: object
-                  description: 搜尋篩選條件
-                  properties:
-                    school:
-                      type: string
-                      example: "國立臺灣大學"
-                    year:
-                      type: integer
-                      example: 113
-                    degree:
-                      type: string
-                      example: "碩士"
-                results_count:
-                  type: integer
-                  description: 搜尋結果數量
-                  example: 25
-      responses:
-        '201':
-          description: 成功記錄檢索歷史
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-    delete:
-      tags: [檢索歷史]
-      summary: 清空檢索歷史
-      description: 清空使用者的所有搜尋歷史記錄
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: 成功清空檢索歷史
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
 
-  /search-history/{id}:
-    delete:
-      tags: [檢索歷史]
-      summary: 刪除單筆檢索記錄
-      description: 刪除指定的搜尋歷史記錄
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: 檢索記錄唯一識別碼
-      responses:
-        '200':
-          description: 成功刪除檢索記錄
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
+
+
 
   # 收藏管理 API
   /savedtheses:
