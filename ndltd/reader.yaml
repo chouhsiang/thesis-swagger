@@ -449,6 +449,194 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
 
+  # 論文匯出 API
+  /theses/export:
+    post:
+      tags: [論文]
+      summary: 匯出論文書目資料
+      description: 根據指定的論文ID列表和匯出設定，匯出論文書目資料
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [thesis_ids, export_settings]
+              properties:
+                thesis_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: 要匯出的論文ID列表
+                  example: ["thesis001", "thesis002", "thesis003"]
+                export_settings:
+                  type: object
+                  required: [output_position, citation_style, encoding, format]
+                  properties:
+                    output_position:
+                      type: string
+                      enum: [simple, complete]
+                      description: 輸出欄位 (簡易書目/完整書目)
+                      example: "complete"
+                    citation_style:
+                      type: string
+                      enum: [apa, chicago, mla, cns13611, cse, ris]
+                      description: 書目資料輸出格式
+                      example: "apa"
+                    encoding:
+                      type: string
+                      enum: [utf8, big5, gb2312]
+                      description: 輸出字碼
+                      example: "utf8"
+                    format:
+                      type: string
+                      enum: [txt, csv, excel, pdf]
+                      description: 輸出格式
+                      example: "txt"
+                    preview:
+                      type: boolean
+                      description: 是否為預覽模式
+                      default: false
+                      example: false
+      responses:
+        '200':
+          description: 匯出成功 (預覽模式)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      preview_content:
+                        type: string
+                        description: 預覽內容
+                        example: "王小明 (2024). 深度學習在自然語言處理的應用研究. 國立臺灣大學資訊工程學系碩士論文."
+                      total_count:
+                        type: integer
+                        description: 總筆數
+                        example: 3
+                      settings:
+                        type: object
+                        description: 使用的匯出設定
+                        properties:
+                          output_position:
+                            type: string
+                            example: "complete"
+                          citation_style:
+                            type: string
+                            example: "apa"
+                          encoding:
+                            type: string
+                            example: "utf8"
+                          format:
+                            type: string
+                            example: "txt"
+        '201':
+          description: 匯出檔案成功 (下載模式)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                description: 匯出的檔案內容
+            text/plain:
+              schema:
+                type: string
+                description: TXT格式的書目資料
+            text/csv:
+              schema:
+                type: string
+                description: CSV格式的書目資料
+            application/vnd.ms-excel:
+              schema:
+                type: string
+                format: binary
+                description: Excel格式的書目資料
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: PDF格式的書目資料
+          headers:
+            Content-Disposition:
+              description: 檔案下載標頭
+              schema:
+                type: string
+                example: "attachment; filename=thesis_export_20240924.txt"
+            Content-Type:
+              description: 檔案類型
+              schema:
+                type: string
+                example: "text/plain; charset=utf-8"
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: [{"code": "invalid_thesis_ids", "message": "論文ID格式不正確"}]
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    example: null
+        '404':
+          description: 部分論文不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: [{"code": "thesis_not_found", "message": "部分論文不存在或無權限存取"}]
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  result:
+                    type: object
+                    properties:
+                      not_found_ids:
+                        type: array
+                        items:
+                          type: string
+                        example: ["thesis999"]
+
   # 排行榜 API
   /ranking/schools:
     get:
